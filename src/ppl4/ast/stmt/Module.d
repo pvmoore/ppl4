@@ -62,32 +62,39 @@ public:
     }
 
     /**
-     * @return true if ...
+     *
      */
     @Implements("Statement")
-    override bool resolve() {
+    override void resolve(ResolveState state) {
+        this.isResolved = true;
 
-        return true;
+
+        super.resolve(state);
+
+        trace("--------------------");
+        dump();
+        trace("--------------------");
     }
     /**
      * @return true if ...
      */
     @Implements("Statement")
     override bool check() {
-
-        return true;
+        // Nothing to do
+        return super.check();
     }
 
     /**
      * @return true if the module was generated successfully
      */
     @Implements("Statement")
-    override bool generate() {
+    override void generate(GenState state) {
 
-        return false;
+
     }
 
     override string toString() {
         return "Module '%s'".format(name);
     }
+protected:
 }

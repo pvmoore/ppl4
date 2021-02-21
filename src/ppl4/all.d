@@ -11,6 +11,7 @@ import std.range                : array;
 import std.path                 : asNormalizedPath, stripExtension;
 import std.file                 : exists;
 import std.array                : replace;
+import std.algorithm.iteration  : map, filter;
 
 import common;
 
@@ -37,19 +38,21 @@ import ppl4.ast.stmt.Variable;
 import ppl4.errors.CompileError;
 import ppl4.errors.SyntaxError;
 
+import ppl4.phases.GenState;
+import ppl4.phases.ParseState;
+import ppl4.phases.ResolveState;
+
 import ppl4.lexing.Lexer;
 import ppl4.lexing.Scanner;
 import ppl4.lexing.Token;
 import ppl4.lexing.TokenKind;
-
-import ppl4.parsing.ParseModule;
-import ppl4.parsing.ParseState;
 
 import ppl4.types.Type;
 import ppl4.types.BuiltinType;
 import ppl4.types.FunctionType;
 import ppl4.types.StructType;
 import ppl4.types.TypeKind;
+import ppl4.types.TypeUtils;
 import ppl4.types.UnresolvedType;
 
 

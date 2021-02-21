@@ -24,7 +24,3 @@ node_modules/
 # Visual studio project files
 *.vcxproj*
 *.sln
-
-dscanner_report.txt
-
-update_extension.bat

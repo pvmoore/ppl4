@@ -17,11 +17,29 @@ public:
 
         this.mainModule = createModule(mainModuleName);
 
-        parsePhase();
-        resolvePhase();
-        checkPhase();
-        generatePhase();
-        linkPhase();
+        try{
+            parsePhase();
+
+            // If we get here then there are no SyntaxErrors
+
+            bool r = resolvePhase();
+            trace("    %s", r);
+
+            r = checkPhase();
+            trace("    %s", r);
+
+            r = generatePhase();
+            trace("    %s", r);
+
+            r = linkPhase();
+            trace("    %s", r);
+
+        }catch(SyntaxError e) {
+            error("Syntax error: %s".format(e));
+        }
+    }
+    bool hasErrors() {
+        return getErrors().length > 0;
     }
     CompileError[] getErrors() {
         CompileError[] e;
@@ -50,35 +68,49 @@ private:
             }
         });
     }
-    void resolvePhase() {
+    bool resolvePhase() {
         info("Resolve phase");
+        bool result = true;
         resolveTime += time(() {
             foreach(m; modules) {
-                m.resolve();
+                auto state = new ResolveState(m);
+                m.resolve(state);
+                result &= state.success();
+                if(!state.success()) {
+                    trace("    %s unresolved", state.getNumUnresolved());
+                }
             }
         });
+        return result;
     }
-    void checkPhase() {
+    bool checkPhase() {
         info("Check phase");
+        bool result = true;
         checkTime += time(() {
             foreach(m; modules) {
-                m.check();
+                result &= m.check();
             }
         });
+        return result;
     }
-    void generatePhase() {
+    bool generatePhase() {
         info("Generate phase");
+        bool result = true;
         generateTime += time(() {
             foreach(m; modules) {
-                m.generate();
+                auto state = new GenState(m);
+                m.generate(state);
+                result &= state.success();
             }
         });
+        return result;
     }
-    void linkPhase() {
+    bool linkPhase() {
         info("Link phase");
         linkTime += time(() {
 
         });
+        return true;
     }
     Module getOrCreateModule(ModuleName name) {
         auto p = name in modules;

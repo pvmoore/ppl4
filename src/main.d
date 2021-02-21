@@ -15,14 +15,14 @@ int main(string[] args) {
 
     c.compile();
 
-
-    auto e = c.getErrors();
-
-    if(e.length > 0) {
+    if(c.hasErrors()) {
         writefln("Fail");
 
-        // todo - display errors
-        writefln("errors = %s", e);
+        auto errors = c.getErrors();
+
+        foreach(e; errors) {
+            writefln("%s", e);
+        }
 
     } else {
         writefln("Ok");

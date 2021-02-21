@@ -5,11 +5,15 @@ import ppl4.all;
 abstract class Statement : Node {
 public:
     Module mod;
+    Token startToken;
     bool isResolved;
 
     this(Module mod) {
         this.mod = mod;
     }
+
+    final int line() { return startToken.line; }
+    final int column() { return startToken.column; }
 
     //abstract Function findFunction(string name);
     //abstract Variable findVariable(string name);
@@ -33,7 +37,7 @@ public:
         auto pub = checkPublicAndConsume(state);
 
         if("import" == state.text()) {
-            if(!importAllowed) new SyntaxError(state.mod, state.line(), state.column());
+            if(!importAllowed) syntaxError(state);
             todo();
         }
 
@@ -47,28 +51,30 @@ public:
             auto text = state.peek(2).text;
 
             if("extern" == text) {
-                if(!functionAllowed) throw new SyntaxError(state);
-                add(new Function(mod, pub).parse(state));
+                if(!functionAllowed) syntaxError(state);
+
+                //add(new Function(mod, pub).parse(state));
+                add(state.make!Function(pub).parse(state));
 
             } else if("struct" == text) {
-                if(!structAllowed) throw new SyntaxError(state);
-                add(new Struct(mod, pub).parse(state));
+                if(!structAllowed) syntaxError(state);
+                add(state.make!Struct(pub).parse(state));
 
             } else if("fn" == text) {
-                if(!functionAllowed) throw new SyntaxError(state);
-                add(new Function(mod, pub).parse(state));
+                if(!functionAllowed) syntaxError(state);
+                add(state.make!Function(pub).parse(state));
 
             } else {
                 // For now assume it is a Variable
 
-                if(!variableAllowed) throw new SyntaxError(state);
-                add(new Variable(mod, pub).parse(state));
+                if(!variableAllowed) syntaxError(state);
+                add(state.make!Variable(pub).parse(state));
             }
         } else if(kind1 == TokenKind.COLON) {
             // name : type [ = expression ]
 
-            if(!variableAllowed) throw new SyntaxError(state);
-            add(new Variable(mod, pub).parse(state));
+            if(!variableAllowed) syntaxError(state);
+            add(state.make!Variable(pub).parse(state));
         } else {
             todo("%s".format(state.peek()));
         }
@@ -76,12 +82,10 @@ public:
         return this;
     }
 
-    bool resolve() {
-        bool result = true;
+    void resolve(ResolveState state) {
         foreach(stmt; children) {
-            result &= stmt.resolve();
+            stmt.resolve(state);
         }
-        return result;
     }
 
     bool check() {
@@ -92,14 +96,12 @@ public:
         return result;
     }
 
-    bool generate() {
-        bool result = true;
+    void generate(GenState state) {
         foreach(stmt; children) {
-            result &= stmt.generate();
+            stmt.generate(state);
         }
-        return result;
     }
-
+protected:
     bool checkPublicAndConsume(ParseState state) {
         if(state.kind()==TokenKind.PLUS) {
             state.next();

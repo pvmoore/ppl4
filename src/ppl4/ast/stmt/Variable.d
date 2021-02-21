@@ -42,7 +42,7 @@ public:
         if(state.kind() == TokenKind.COLON) {
             state.next();
 
-            this.type = Type.parseType(state);
+            this.type = parseType(state);
 
         }
 
@@ -50,28 +50,33 @@ public:
         if(state.isKind(TokenKind.EQUALS)) {
             state.next();
 
-            add(Expression.parseExpression(state));
+            add(parseExpression(state));
         }
 
         return this;
     }
 
     @Implements("Statement")
-    override bool resolve() {
-        todo();
-        return false;
+    override void resolve(ResolveState state) {
+        if(!type.isResolved) {
+
+            todo();
+
+            state.unresolved(this);
+        }
+        super.resolve(state);
     }
 
     @Implements("Statement")
     override bool check() {
-        todo();
-        return false;
+        // 1) name must not be duplicate or shadow
+        // 2) ...
+        return super.check();
     }
 
     @Implements("Statement")
-    override bool generate() {
-        todo();
-        return false;
+    override void generate(GenState state) {
+
     }
 
     override string toString() {

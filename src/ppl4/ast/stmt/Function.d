@@ -51,7 +51,7 @@ public:
 
             while(state.kind()!=TokenKind.RBRACKET) {
 
-                add(new Variable(mod, false).parse(state));
+                add(state.make!Variable(false).parse(state));
 
                 numParams++;
 
@@ -70,7 +70,7 @@ public:
         if(state.kind() == TokenKind.COLON) {
             state.next();
 
-            this.returnType = Type.parseType(state);
+            this.returnType = parseType(state);
         } else {
             this.returnType = UNKNOWN;
         }
@@ -84,7 +84,7 @@ public:
 
                 switch(state.text()) {
                     case "return":
-                    add(new Return(mod).parse(state));
+                    add(state.make!Return().parse(state));
                         break;
                     default:
                         todo();
@@ -99,21 +99,28 @@ public:
     }
 
     @Implements("Statement")
-    override bool resolve() {
-        todo();
-        return false;
+    override void resolve(ResolveState state) {
+        if(!isResolved) {
+            resolveReturnType();
+
+            if(returnType.isResolved()) {
+                this.isResolved = true;
+            } else {
+                state.unresolved(this);
+            }
+        }
+        super.resolve(state);
     }
 
     @Implements("Statement")
     override bool check() {
-        todo();
-        return false;
+        // 1) ...
+        return super.check();
     }
 
     @Implements("Statement")
-    override bool generate() {
-        todo();
-        return false;
+    override void generate(GenState state) {
+
     }
 
     override string toString() {
@@ -121,5 +128,34 @@ public:
         string rt = returnType.isResolved() ? " returns %s".format(returnType) : "";
         string ex = isExtern ? " extern" : "";
         return "Function%s '%s'%s%s%s".format(isPublic ? "(+)":"", name, p, ex, rt);
+    }
+private:
+    /**
+     * Collect all return Expressions and try to determine a returnType
+     */
+    void resolveReturnType() {
+        Return[] returns = collect!Return();
+
+        if(returns.length == 0) {
+            this.returnType = VOID;
+            return;
+        }
+
+        Expression[] exprs = returns.filter!(it=>it.hasChildren())
+                                    .map!(it=>it.first())
+                                    .map!(it=>cast(Expression)it)
+                                    .array;
+
+        if(exprs.length == 0) {
+            this.returnType = VOID;
+            return;
+        }
+
+        if(exprs.length != returns.length) {
+            returnTypeMismatch(this);
+            return;
+        }
+
+        todo("Determine return type");
     }
 }

@@ -2,6 +2,9 @@ module ppl4.ast.expr.Number;
 
 import ppl4.all;
 
+/**
+ *  Number
+ */
 final class Number : Expression {
 private:
     Type _type;
@@ -25,21 +28,22 @@ public:
     }
 
     @Implements("Statement")
-    override bool resolve() {
-        todo();
-        return false;
+    override void resolve(ResolveState state) {
+        if(!isResolved) {
+
+        }
     }
 
     @Implements("Statement")
     override bool check() {
-        todo();
-        return false;
+        // 1) ...
+        return true;
     }
 
     @Implements("Statement")
-    override bool generate() {
-        todo();
-        return false;
+    override void generate(GenState state) {
+
+
     }
 
     override string toString() {

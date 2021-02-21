@@ -9,9 +9,9 @@ public:
     this(Module mod) {
         super(mod);
     }
+}
 
-    static Expression parseExpression(ParseState state) {
-        todo("%s".format(state.peek()));
-        return null;
-    }
+Expression parseExpression(ParseState state) {
+    todo("%s".format(state.peek()));
+    return null;
 }

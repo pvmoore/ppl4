@@ -1,4 +1,4 @@
-module ppl4.parsing.ParseState;
+module ppl4.phases.ParseState;
 
 import ppl4.all;
 
@@ -12,6 +12,20 @@ public:
     this(Module mod, Token[] tokens) {
         this.mod = mod;
         this.tokens = tokens;
+    }
+
+    T make(T)(bool isPublic = true) {
+        import std.traits;
+
+        T instance;
+
+        static if(is(T==Function) || is(T==Variable) || is(T==Struct)) {
+            instance = new T(mod, isPublic);
+        } else {
+            instance = new T(mod);
+        }
+        instance.startToken = peek();
+        return instance;
     }
 
     Token peek(int i = 0) {
@@ -49,7 +63,7 @@ public:
     }
     auto skip(TokenKind k) {
         if(kind() != k) {
-            throw new SyntaxError(mod, line(), column());
+            syntaxError(this);
         }
         return next();
     }
@@ -59,7 +73,7 @@ public:
     }
     auto skip(string kw) {
         if(text() != kw) {
-            throw new SyntaxError(this);
+            syntaxError(this);
         }
         return next();
     }
@@ -68,7 +82,7 @@ public:
         foreach(k; kinds) {
             if(kk==k) return;
         }
-        throw new SyntaxError(mod, line(), column());
+        syntaxError(this);
     }
 private:
     void move() {

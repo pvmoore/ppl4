@@ -54,21 +54,20 @@ public:
     }
 
     @Implements("Statement")
-    override bool resolve() {
-        todo();
-        return false;
+    override void resolve(ResolveState state) {
+        this.isResolved = true;
+        super.resolve(state);
     }
 
     @Implements("Statement")
     override bool check() {
-        todo();
-        return false;
+        // 1) ...
+        return super.check();
     }
 
     @Implements("Statement")
-    override bool generate() {
-        todo();
-        return false;
+    override void generate(GenState state) {
+
     }
 
     override string toString() {
