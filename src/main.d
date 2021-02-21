@@ -8,7 +8,9 @@ int main(string[] args) {
     auto dir = "projects/test";
     auto file = "test.p4";
 
-    auto config = new Config(dir, file);
+    auto config = new Config(dir, file)
+        .withOutput("projects/test/target");
+
     writefln("%s", config);
 
     auto c = new Compiler(config);

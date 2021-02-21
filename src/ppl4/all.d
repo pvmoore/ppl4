@@ -8,12 +8,13 @@ import std.stdio                : writef, writefln;
 import std.format               : format;
 import std.datetime.stopwatch   : StopWatch;
 import std.range                : array;
-import std.path                 : asNormalizedPath, stripExtension;
-import std.file                 : exists;
+import std.path                 : asAbsolutePath, asNormalizedPath, buildNormalizedPath, isAbsolute, stripExtension;
+import std.file                 : exists, isDir, mkdirRecurse;
 import std.array                : replace;
 import std.algorithm.iteration  : map, filter;
 
 import common;
+import llvm.all;
 
 import ppl4.Config;
 import ppl4.logging;
@@ -70,6 +71,11 @@ struct FileName {
     auto withoutExtension() const {
         return FileName(stripExtension(this.value));
     }
+    auto withExtension(string ext) const {
+        expect(ext !is null);
+        ext = ext[0]=='.' ? ext : "." ~ ext;
+        return FileName(stripExtension(this.value) ~ ext);
+    }
     ModuleName toModuleName() const {
         return ModuleName(FileName(value.replace("/", ".")));
     }
@@ -87,10 +93,25 @@ struct Directory {
 
     this(string value) {
         expect(value !is null);
-        this.value = asNormalizedPath(value)
-                    .array.as!string
-                    .replace("\\", "/");
+        auto norm = asNormalizedPath(value).array.as!string;
+        this.value = norm.replace("\\", "/");
         if(this.value[$-1] != '/') this.value ~= "/";
+    }
+    bool exists() const {
+        return .exists(value);
+    }
+    void create() {
+        mkdirRecurse(value);
+    }
+    Directory absolute() {
+        return Directory(asAbsolutePath(value).array);
+    }
+    Directory add(string dir) {
+        expect(dir !is null);
+        return Directory(buildNormalizedPath(value, dir));
+    }
+    Directory add(Directory dir) {
+        return Directory(buildNormalizedPath(value, dir.value));
     }
     string toString() const {
         return value;

@@ -7,11 +7,22 @@ final class Config {
 public:
     FileName mainFilename;
     Directory directory;
+    FileNameAndDirectory output;
+    bool writeIR = true;
+    bool writeASM = true;
 
     this(string directory, string mainFilename) {
         this.directory = Directory(directory);
         this.mainFilename = FileName(mainFilename);
-
+        this.output = FileNameAndDirectory(
+            this.mainFilename.withExtension("exe"),
+            this.directory);
+    }
+    auto withOutput(string directory) {
+        this.output = FileNameAndDirectory(
+            this.mainFilename.withExtension("exe"),
+            Directory(directory));
+        return this;
     }
     auto getFullPath(ModuleName name) {
         return FileNameAndDirectory(name.toFileName(), directory);
@@ -32,6 +43,8 @@ public:
         s ~= format("\nPPL4 %s\n\n", VERSION);
         s ~= format("main file .... %s\n", mainFilename);
         s ~= format("root path .... %s\n", directory);
+        s ~= format("output dir ... %s\n", output.directory);
+        s ~= format("target file .. %s\n", output.filename);
         return s;
     }
 private:

@@ -8,11 +8,17 @@ private:
     Module[ModuleName] modules;
     Config config;
     ulong parseTime, resolveTime, checkTime, generateTime, linkTime;
+    LLVMWrapper llvm;
 public:
     this(Config config) {
         this.config = config;
+        this.llvm = new LLVMWrapper;
+
+        config.output.directory.add(Directory("ir")).create();
     }
     void compile() {
+        scope(exit) destroy();
+
         ModuleName mainModuleName = ModuleName(config.mainFilename);
 
         this.mainModule = createModule(mainModuleName);
@@ -22,21 +28,33 @@ public:
 
             // If we get here then there are no SyntaxErrors
 
+            // TODO - repeat this phase unttil we have resolved everything
+            //        or we can't make any progress
             bool r = resolvePhase();
             trace("    %s", r);
 
-            r = checkPhase();
-            trace("    %s", r);
 
-            r = generatePhase();
-            trace("    %s", r);
+            if(!checkPhase()) {
+                warn("Semantic check failed");
+                return;
+            }
 
-            r = linkPhase();
-            trace("    %s", r);
+            if(!generatePhase()) {
+                warn("Generation failed");
+                return;
+            }
+
+            if(!linkPhase()) {
+                warn("Link failed");
+                return;
+            }
 
         }catch(SyntaxError e) {
             error("Syntax error: %s".format(e));
         }
+    }
+    void destroy() {
+        this.llvm.destroy();
     }
     bool hasErrors() {
         return getErrors().length > 0;
@@ -98,7 +116,7 @@ private:
         bool result = true;
         generateTime += time(() {
             foreach(m; modules) {
-                auto state = new GenState(m);
+                auto state = new GenState(llvm, m);
                 m.generate(state);
                 result &= state.success();
             }

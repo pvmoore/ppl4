@@ -14,6 +14,7 @@ public:
     Config config;
     Token[] tokens;
     CompileError[] errors;
+    LLVMModule llvmValue;
 
     this(Config config, ModuleName name) {
         super(this);
@@ -89,8 +90,17 @@ public:
      */
     @Implements("Statement")
     override void generate(GenState state) {
+        this.llvmValue = state.llvm.createModule(name.value);
 
+        // Generate module scope strings
+        // Generate module scope variables
+        // Generate module scope functions
+        // Generate structs and classes
+        // Generate Enums
 
+        super.generate(state);
+
+        state.writeLL(Directory("ir"));
     }
 
     override string toString() {
