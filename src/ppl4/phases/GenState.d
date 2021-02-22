@@ -21,7 +21,7 @@ public:
     void writeLL(Directory subdir) {
         if(mod.config.writeIR) {
             auto path = FileNameAndDirectory(
-                mod.name.toFileName().withExtension("ll"),
+                mod.name.toFileName().withExtension(".ll"),
                 mod.config.output.directory.add(subdir));
             info("writeLL %s", path);
             mod.llvmValue.writeToFileLL(path.toString());
@@ -29,20 +29,15 @@ public:
     }
     bool writeASM() {
         if(mod.config.writeASM) {
-        //     string path = mod.config.targetPath ~ mod.fileName ~ ".asm";
-        //     if(!llvm.x86Target.writeToFileASM(mod.llvmValue, path)) {
-        //         warn("failed to write ASM %s", path);
-        //         return false;
-        //     }
+            auto path = FileNameAndDirectory(
+                mod.name.toFileName().withExtension(".asm"),
+                mod.config.output.directory);
+            info("writeASM %s", path);
+            if(!llvm.x86Target.writeToFileASM(mod.llvmValue, path.toString())) {
+                warn("failed to write ASM %s", path);
+                return false;
+            }
         }
-        return true;
-    }
-    bool writeOBJ() {
-        // string path = mod.config.targetPath ~ mod.fileName ~ ".obj";
-        // if(!llvm.x86Target.writeToFileOBJ(mod.llvmValue, path)) {
-        //     warn("failed to write OBJ %s", path);
-        //     return false;
-        // }
         return true;
     }
     bool verify() {

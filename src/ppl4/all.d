@@ -40,6 +40,8 @@ import ppl4.errors.CompileError;
 import ppl4.errors.SyntaxError;
 
 import ppl4.phases.GenState;
+import ppl4.phases.Linker;
+import ppl4.phases.Optimiser;
 import ppl4.phases.ParseState;
 import ppl4.phases.ResolveState;
 

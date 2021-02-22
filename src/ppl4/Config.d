@@ -10,6 +10,9 @@ public:
     FileNameAndDirectory output;
     bool writeIR = true;
     bool writeASM = true;
+    bool writeOBJ = true;
+    bool isDebug = true;
+    string subsystem = "console";
 
     this(string directory, string mainFilename) {
         this.directory = Directory(directory);
@@ -24,19 +27,12 @@ public:
             Directory(directory));
         return this;
     }
+    string[] getExternalLibs() {
+        return null;
+    }
     auto getFullPath(ModuleName name) {
         return FileNameAndDirectory(name.toFileName(), directory);
     }
-    // string getFilename(ModuleName name) {
-    //     return rootPath ~ name.value.replace(".", "/") ~ ".p4";
-    // }
-    // string calculateRelativePath(string path) {
-    //     // auto a = asNormalizedPath(path)
-    //     //             .array.as!string
-    //     //             .replace("\\", "/");
-
-    //     return relativePath(path, rootPath);
-    // }
 
     override string toString() {
         string s;

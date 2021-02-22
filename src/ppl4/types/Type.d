@@ -29,6 +29,14 @@ abstract class Type {
         return this;
     }
 
+    LLVMTypeRef getLLVMType() {
+        todo();
+
+
+
+        return null;
+    }
+
     override string toString() {
         string s;
         foreach(i; 0..ptrDepth) {

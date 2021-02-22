@@ -125,10 +125,12 @@ private:
     }
     bool linkPhase() {
         info("Link phase");
+        bool result;
         linkTime += time(() {
-
+            auto linker = new Linker(llvm, config, mainModule);
+            result = linker.link();
         });
-        return true;
+        return result;
     }
     Module getOrCreateModule(ModuleName name) {
         auto p = name in modules;

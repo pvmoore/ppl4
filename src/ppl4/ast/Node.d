@@ -41,22 +41,24 @@ public:
         }
     }
 
-    T[] collect(T)(bool delegate(T t) filter = null) {
+    T[] collect(T)(bool delegate(T t) filter = null, bool recurse = true) {
         T[] things;
         each!T((t) {
             if(!filter || filter(t)) {
                 things ~= t;
             }
-        });
+        }, recurse);
         return things;
     }
 
-    void each(T)(void delegate(T t) call) {
+    void each(T)(void delegate(T t) call, bool recurse = true) {
         if(this.isA!T) {
             call(this.as!T);
         }
-        foreach(ch; children) {
-            ch.each(call);
+        if(recurse) {
+            foreach(ch; children) {
+                ch.each(call);
+            }
         }
     }
 }

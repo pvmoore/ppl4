@@ -14,6 +14,7 @@ public:
     Type returnType;
     bool isPublic;
     bool isExtern;
+    LLVMValueRef llvmValue;
 
     this(Module mod, bool isPublic) {
         super(mod);
@@ -121,6 +122,12 @@ public:
     @Implements("Statement")
     override void generate(GenState state) {
 
+
+        super.generate(state);
+    }
+
+    void generateDecl() {
+        doGenerateDecl();
     }
 
     override string toString() {
@@ -157,5 +164,35 @@ private:
         }
 
         todo("Determine return type");
+    }
+    void doGenerateDecl() {
+        // this.llvmValue = module_.llvmValue.addFunction(
+        //     f.getMangledName(),
+        //     type.returnType.getLLVMType(),
+        //     type.paramTypes().map!(it=>it.getLLVMType()).array,
+        //     f.getCallingConvention()
+        // );
+
+        // inline | noinline
+        bool isInline   = false;
+        bool isNoInline = false;
+
+        if(isInline) {
+            addFunctionAttribute(llvmValue, LLVMAttribute.AlwaysInline);
+        } else if(isNoInline) {
+            addFunctionAttribute(llvmValue, LLVMAttribute.NoInline);
+        }
+
+        // throws?
+        //addFunctionAttribute(llvmValue, LLVMAttribute.NoUnwind);
+
+        //// linkage
+        //if(!f.isExport && f.access==Access.PRIVATE) {
+
+        // if(isExtern) {
+        //     f.llvmValue.setLinkage(LLVMLinkage.LLVMExternalLinkage);
+        // } else if(f.numExternalRefs==0 && !f.isProgramEntry) {
+        //     f.llvmValue.setLinkage(LLVMLinkage.LLVMInternalLinkage);
+        // }
     }
 }

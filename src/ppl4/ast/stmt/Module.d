@@ -94,9 +94,20 @@ public:
 
         // Generate module scope strings
         // Generate module scope variables
+        auto vars = collect!Variable(null, false);
+
         // Generate module scope functions
+        // Needs to be done first so that we have the decl LLVLValueRefs available
+        auto funcs = collect!Function(null, false);
+        foreach(f; funcs) {
+            f.generateDecl();
+        }
+
         // Generate structs and classes
+        auto structs = collect!Struct(null, false);
         // Generate Enums
+
+
 
         super.generate(state);
 
@@ -107,4 +118,5 @@ public:
         return "Module '%s'".format(name);
     }
 protected:
+
 }

@@ -1,0 +1,100 @@
+module ppl4.phases.Linker;
+
+import ppl4.all;
+
+final class Linker {
+private:
+    LLVMWrapper llvm;
+    Config config;
+    Module mainModule;
+    FileName outName;
+public:
+    this(LLVMWrapper llvm, Config config, Module mainModule) {
+        this.llvm = llvm;
+        this.config = config;
+        this.mainModule = mainModule;
+        this.outName = mainModule.name.toFileName();
+    }
+    bool link() {
+        auto obj = getFilename(".obj");
+        auto exe = getFilename(".exe");
+
+        writeOBJ(obj);
+
+        auto args = createArgs(obj, exe);
+
+        executeLinker(args, obj);
+
+        return true;
+    }
+private:
+    string getFilename(string ext) {
+        auto name = outName.withExtension(ext);
+        return config.output.directory.value ~ name.value;
+    }
+    bool writeOBJ(string filename) {
+        info("writeOBJ %s", filename);
+        if(!llvm.x86Target.writeToFileOBJ(mainModule.llvmValue, filename)) {
+            warn("failed to write OBJ %s", filename);
+            return false;
+        }
+        return true;
+    }
+    string[] createArgs(string obj, string exe) {
+        auto args = [
+            "link",
+            "/NOLOGO",
+            //"/VERBOSE",
+            "/MACHINE:X64",
+            "/WX",              /// Treat linker warnings as errors
+            "/SUBSYSTEM:" ~ config.subsystem
+        ];
+
+        if(config.isDebug) {
+            args ~= [
+                "/DEBUG:NONE",  /// Don't generate a PDB for now
+                "/OPT:NOREF"    /// Don't remove unreferenced functions and data
+            ];
+        } else {
+            args ~= [
+                "/RELEASE",
+                "/OPT:REF",     /// Remove unreferenced functions and data
+                //"/LTCG",        /// Link time code gen
+            ];
+        }
+
+        args ~= [
+            obj,
+            "/OUT:" ~ exe
+        ];
+
+        args ~= config.getExternalLibs();
+
+        trace("link command: %s", args);
+        return args;
+    }
+    void executeLinker(string[] args, string obj) {
+        import std.process : spawnProcess, wait, Config;
+
+        int returnStatus;
+        string errorMsg;
+        try{
+            auto pid = spawnProcess(args, null, Config.none);
+            returnStatus = wait(pid);
+
+        }catch(Exception e) {
+            errorMsg     = e.msg;
+            returnStatus = -1;
+        }
+
+        if(returnStatus!=0) {
+            linkError(mainModule, "Linker returned %s: ".format(returnStatus) ~ errorMsg);
+        }
+
+        /// Delete the obj file if required
+        if(!config.writeOBJ) {
+            import std.file : remove;
+            remove(obj);
+        }
+    }
+}

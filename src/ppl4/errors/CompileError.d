@@ -2,7 +2,7 @@ module ppl4.errors.CompileError;
 
 import ppl4.all;
 
-class CompileError {
+final class CompileError {
 public:
     Module mod;
     int line, column;
@@ -26,4 +26,7 @@ void syntaxError(ParseState state) {
 }
 void returnTypeMismatch(Statement stmt) {
     stmt.mod.addError(new CompileError(stmt.mod, stmt.line(), stmt.column(), "Return type mismatch"));
+}
+void linkError(Module mainModule, string msg) {
+    mainModule.addError(new CompileError(mainModule, 0, 0, msg));
 }
