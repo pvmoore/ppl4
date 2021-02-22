@@ -21,6 +21,11 @@ public:
         return this;
     }
 
+    override bool exactlyMatches(Type other) {
+        todo();
+        return false;
+    }
+
     override string toString() {
         return "FunctionType";
     }

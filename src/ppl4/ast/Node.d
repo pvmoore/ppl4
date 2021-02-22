@@ -34,31 +34,43 @@ public:
         return this.as!Statement;
     }
 
-    void dump(string indent = "") {
-        trace("%s%s".format(indent, this));
-        foreach(ch; children) {
-            ch.dump(indent ~ "    ");
-        }
+    T ancestor(T)() {
+        if(!hasParent()) return null;
+        if(parent.isA!T) return parent.as!T;
+        return parent.ancestor!T;
     }
 
-    T[] collect(T)(bool delegate(T t) filter = null, bool recurse = true) {
+    T[] collectChildren(T)() {
+        T[] things;
+        foreach(ch; children) {
+            if(ch.isA!T) things ~= ch.as!T;
+        }
+        return things;
+    }
+
+    T[] collect(T)(bool delegate(T t) filter = null) {
         T[] things;
         each!T((t) {
             if(!filter || filter(t)) {
                 things ~= t;
             }
-        }, recurse);
+        });
         return things;
     }
 
-    void each(T)(void delegate(T t) call, bool recurse = true) {
+    void each(T)(void delegate(T t) call) {
         if(this.isA!T) {
             call(this.as!T);
         }
-        if(recurse) {
-            foreach(ch; children) {
-                ch.each(call);
-            }
+        foreach(ch; children) {
+            ch.each(call);
+        }
+    }
+
+    void dump(string indent = "") {
+        trace("%s%s".format(indent, this));
+        foreach(ch; children) {
+            ch.dump(indent ~ "    ");
         }
     }
 }

@@ -94,17 +94,18 @@ public:
 
         // Generate module scope strings
         // Generate module scope variables
-        auto vars = collect!Variable(null, false);
+        auto vars = collectChildren!Variable;
 
         // Generate module scope functions
         // Needs to be done first so that we have the decl LLVLValueRefs available
-        auto funcs = collect!Function(null, false);
+        auto funcs = collectChildren!Function;
+        //trace("funcs = %s", funcs);
         foreach(f; funcs) {
             f.generateDecl();
         }
 
         // Generate structs and classes
-        auto structs = collect!Struct(null, false);
+        auto structs = collectChildren!Struct;
         // Generate Enums
 
 
@@ -112,6 +113,7 @@ public:
         super.generate(state);
 
         state.writeLL(Directory("ir"));
+        state.verify();
     }
 
     override string toString() {

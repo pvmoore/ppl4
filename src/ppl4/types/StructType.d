@@ -11,6 +11,11 @@ public:
         super(TypeKind.STRUCT, 0);
     }
 
+    override bool exactlyMatches(Type other) {
+        todo();
+        return false;
+    }
+
     override string toString() {
         return super.toString() ~ "StructType";
     }

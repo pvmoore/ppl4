@@ -10,6 +10,10 @@ public:
         super(kind, ptrDepth);
     }
 
+    override bool exactlyMatches(Type other) {
+        return kind == other.kind && ptrDepth == other.ptrDepth;
+    }
+
     override string toString() {
         return super.toString() ~ kind.toString();
     }

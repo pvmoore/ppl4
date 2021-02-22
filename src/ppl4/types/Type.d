@@ -14,10 +14,18 @@ abstract class Type {
     final bool isPtr() {
         return ptrDepth > 0;
     }
+    final bool isReal() {
+        return kind.isOneOf(TypeKind.FLOAT, TypeKind.DOUBLE);
+    }
+    final bool isInteger() {
+        return kind.isOneOf(TypeKind.BYTE, TypeKind.SHORT, TypeKind.INT, TypeKind.LONG);
+    }
 
     bool isResolved() {
         return kind != TypeKind.UNKNOWN;
     }
+
+    abstract bool exactlyMatches(Type other);
 
     /**
      * @return a new resolved Type or this.
@@ -29,12 +37,65 @@ abstract class Type {
         return this;
     }
 
-    LLVMTypeRef getLLVMType() {
-        todo();
+    final LLVMTypeRef getLLVMType() {
+        expect(isResolved());
 
+        LLVMTypeRef t;
+        final switch(kind) with(TypeKind) {
+            case BOOL:
+            case BYTE: t = i8Type(); break;
+            case SHORT: t = i16Type(); break;
+            case INT: t = i32Type(); break;
+            case LONG: t = i64Type(); break;
+            case FLOAT: t = f32Type(); break;
+            case DOUBLE: t = f64Type(); break;
+            case VOID: t = voidType(); break;
+            case STRUCT:
+            case CLASS_PTR:
+            case FUNCTION_PTR:
+                todo();
+                t = null;
+                break;
+            case UNKNOWN:
+                expect(false, "type kind is %s".format(kind));
+                break;
+        }
+        if(ptrDepth > 0) {
+            if(kind == TypeKind.VOID) {
+                t = i8Type();
+            }
+            foreach(i; 0..ptrDepth) {
+                t = pointerType(t);
+            }
+        }
+        return t;
+    }
 
-
-        return null;
+    int size() {
+        if(isPtr()) return 8;
+        final switch(kind) with(TypeKind) {
+            case BOOL:
+            case BYTE:
+                return 1;
+            case SHORT:
+                return 2;
+            case INT:
+            case FLOAT:
+                return 4;
+            case LONG:
+            case DOUBLE:
+                return 8;
+            case STRUCT:
+                todo();
+                return 0;
+            case UNKNOWN:
+            case VOID:
+            case FUNCTION_PTR:
+            case CLASS_PTR:
+                expect(false, "type kind is %s".format(kind));
+                break;
+        }
+        assert(false);
     }
 
     override string toString() {

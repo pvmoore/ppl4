@@ -14,11 +14,31 @@ public:
     Type returnType;
     bool isPublic;
     bool isExtern;
+    bool isProgramEntry;
     LLVMValueRef llvmValue;
 
     this(Module mod, bool isPublic) {
         super(mod);
         this.isPublic = isPublic;
+    }
+
+    string uniqueName() {
+        expect(isResolved);
+        if(numParams==0) return name;
+        string s;
+        return "%s(%s)".format(name, typeString(paramTypes));
+    }
+    LLVMCallConv callingConvention() {
+        if(isExtern) return LLVMCallConv.LLVMCCallConv;
+        if(isProgramEntry) return LLVMCallConv.LLVMCCallConv;
+        return LLVMCallConv.LLVMFastCallConv;
+    }
+
+    Variable[] params() {
+        return children[0..numParams].map!(it=>cast(Variable)it).array;
+    }
+    Type[] paramTypes() {
+        return params().map!(it=>it.type).array;
     }
 
     @Implements("Node")
@@ -102,7 +122,23 @@ public:
     @Implements("Statement")
     override void resolve(ResolveState state) {
         if(!isResolved) {
+            if("console" == mod.config.subsystem) {
+                if("main" == name) {
+                    isProgramEntry = true;
+                }
+            } else {
+                if("winMain" == name) {
+                    isProgramEntry = true;
+                }
+            }
+
             resolveReturnType();
+
+            if(returnType.kind == TypeKind.VOID && !returnType.isPtr()) {
+                if(!hasChildren() || !last().isA!Return) {
+                    add(new Return(mod));
+                }
+            }
 
             if(returnType.isResolved()) {
                 this.isResolved = true;
@@ -121,7 +157,10 @@ public:
 
     @Implements("Statement")
     override void generate(GenState state) {
+        if(isExtern) return;
 
+        auto entry = llvmValue.appendBasicBlock("entry");
+        state.moveToBlock(entry);
 
         super.generate(state);
     }
@@ -166,12 +205,13 @@ private:
         todo("Determine return type");
     }
     void doGenerateDecl() {
-        // this.llvmValue = module_.llvmValue.addFunction(
-        //     f.getMangledName(),
-        //     type.returnType.getLLVMType(),
-        //     type.paramTypes().map!(it=>it.getLLVMType()).array,
-        //     f.getCallingConvention()
-        // );
+        this.llvmValue = mod.llvmValue.addFunction(
+            uniqueName(),
+            returnType.getLLVMType(),
+            paramTypes().map!(it=>it.getLLVMType()).array,
+            callingConvention()
+        );
+        info("f = %s", llvmValue.toString());
 
         // inline | noinline
         bool isInline   = false;
@@ -184,15 +224,15 @@ private:
         }
 
         // throws?
-        //addFunctionAttribute(llvmValue, LLVMAttribute.NoUnwind);
+        addFunctionAttribute(llvmValue, LLVMAttribute.NoUnwind);
 
         //// linkage
         //if(!f.isExport && f.access==Access.PRIVATE) {
 
-        // if(isExtern) {
-        //     f.llvmValue.setLinkage(LLVMLinkage.LLVMExternalLinkage);
-        // } else if(f.numExternalRefs==0 && !f.isProgramEntry) {
-        //     f.llvmValue.setLinkage(LLVMLinkage.LLVMInternalLinkage);
-        // }
+        if(isExtern || isProgramEntry) {
+            llvmValue.setLinkage(LLVMLinkage.LLVMExternalLinkage);
+        } else /*if(numExternalRefs==0 && )*/ {
+            llvmValue.setLinkage(LLVMLinkage.LLVMInternalLinkage);
+        }
     }
 }

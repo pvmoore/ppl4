@@ -12,6 +12,11 @@ public:
         super(mod);
     }
 
+    Expression expr() {
+        expect(hasChildren());
+        return first().as!Expression;
+    }
+
     @Implements("Node")
     override NodeId id() { return NodeId.RETURN; }
 
@@ -47,7 +52,15 @@ public:
 
     @Implements("Statement")
     override void generate(GenState state) {
-
+        auto func = ancestor!Function;
+        info("return %s", func);
+        if(hasChildren()) {
+            first().generate(state);
+            state.rhs = state.castType(state.rhs, expr().type(), func.returnType);
+            state.builder.ret(state.rhs);
+        } else {
+            state.builder.retVoid();
+        }
     }
 
     override string toString() {
