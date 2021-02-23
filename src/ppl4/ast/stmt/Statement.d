@@ -83,17 +83,16 @@ public:
     }
 
     void resolve(ResolveState state) {
+        //trace("Resolve %s (%s children)", this.id(), numChildren());
         foreach(stmt; children) {
             stmt.resolve(state);
         }
     }
 
-    bool check() {
-        bool result = true;
+    void check() {
         foreach(stmt; children) {
-            result &= stmt.check();
+            stmt.check();
         }
-        return result;
     }
 
     void generate(GenState state) {

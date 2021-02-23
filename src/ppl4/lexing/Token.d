@@ -4,6 +4,7 @@ import ppl4.all;
 
 __gshared {
     Token NO_TOKEN = Token(TokenKind.NONE);
+    Token MODULE_TOKEN = Token(TokenKind.NONE);
 }
 
 struct Token {

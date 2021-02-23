@@ -24,6 +24,9 @@ public:
     override bool exactlyMatches(Type other) {
         return false;
     }
+    override bool canImplicitlyCastTo(Type other) {
+        return false;
+    }
 
     override string toString() {
         return super.toString() ~ "UnresolvedType(%s)".format(name);

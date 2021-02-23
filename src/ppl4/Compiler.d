@@ -9,12 +9,12 @@ private:
     Config config;
     ulong parseTime, resolveTime, checkTime, generateTime, linkTime;
     LLVMWrapper llvm;
+    Writer writer;
 public:
     this(Config config) {
         this.config = config;
         this.llvm = new LLVMWrapper;
-
-        config.output.directory.add(Directory("ir")).create();
+        this.writer = new Writer(llvm);
     }
     void compile() {
         scope(exit) destroy();
@@ -28,29 +28,32 @@ public:
 
             // If we get here then there are no SyntaxErrors
 
-            // TODO - repeat this phase unttil we have resolved everything
-            //        or we can't make any progress
-            bool r = resolvePhase();
-            trace("    %s", r);
+            if(!resolvePhase()) {
+                error("Symbol resolution failed");
+                return;
+            }
 
+            // If we get here then all symbols are resolved
 
             if(!checkPhase()) {
-                warn("Semantic check failed");
+                error("Semantic check failed");
                 return;
             }
 
             if(!generatePhase()) {
-                warn("Generation failed");
+                error("Generation failed");
                 return;
             }
 
             if(!linkPhase()) {
-                warn("Link failed");
+                error("Link failed");
                 return;
             }
 
         }catch(SyntaxError e) {
             error("Syntax error: %s".format(e));
+        }catch(VerifyError e) {
+            error("Verification error");
         }
     }
     void destroy() {
@@ -88,14 +91,49 @@ private:
     }
     bool resolvePhase() {
         info("Resolve phase");
+
         bool result = true;
         resolveTime += time(() {
-            foreach(m; modules) {
-                auto state = new ResolveState(m);
-                m.resolve(state);
-                result &= state.success();
-                if(!state.success()) {
-                    trace("    %s unresolved", state.getNumUnresolved());
+            ResolveState[ModuleName] states;
+
+            foreach(m; modules.values()) {
+                states[m.name] = new ResolveState(m);
+            }
+
+            foreach(pass; 0..2) {
+                trace("pass %s", pass);
+                result = true;
+
+                // todo - parallel foreach here
+                foreach(m; modules.values()) {
+                    auto state = states[m.name];
+                    m.resolve(state);
+                    result &= state.success();
+                }
+
+                if(!result) {
+                    trace("===================================================");
+                    auto total = states.values().map!(it=>it.getNumUnresolved()).sum();
+                    trace("    %s unresolved", total);
+
+                    foreach(state; states.values()) {
+                        if(!state.success()) {
+                            foreach(i, stmt; state.getUnresolvedStatements()) {
+                                info("    [%s][%s] %s", stmt.mod, i, stmt);
+                            }
+                        }
+
+                        trace("--------------------");
+                        state.mod.dump();
+                        trace("--------------------");
+                    }
+                    trace("===================================================");
+
+                    foreach(state; states.values()) {
+                        state.reset();
+                    }
+                } else {
+                    break;
                 }
             }
         });
@@ -103,20 +141,19 @@ private:
     }
     bool checkPhase() {
         info("Check phase");
-        bool result = true;
         checkTime += time(() {
             foreach(m; modules) {
-                result &= m.check();
+                m.check();
             }
         });
-        return result;
+        return !hasErrors();
     }
     bool generatePhase() {
         info("Generate phase");
         bool result = true;
         generateTime += time(() {
             foreach(m; modules) {
-                auto state = new GenState(llvm, m);
+                auto state = new GenState(llvm, writer, m);
                 m.generate(state);
                 result &= state.success();
             }
@@ -125,9 +162,22 @@ private:
     }
     bool linkPhase() {
         info("Link phase");
+
         bool result;
         linkTime += time(() {
-            auto linker = new Linker(llvm, config, mainModule);
+            // Create one merged module and optimise it
+            auto otherModules = modules.values()
+                                       .filter!(it=>it !is mainModule)
+                                       .map!(it=>it.llvmValue)
+                                       .array();
+
+            if(otherModules.length > 0) {
+                llvm.linkModules(mainModule.llvmValue, otherModules);
+                llvm.passManager.runOnModule(mainModule.llvmValue);
+                writer.writeLL(mainModule, Directory(""));
+            }
+
+            auto linker = new Linker(llvm, writer, config, mainModule);
             result = linker.link();
         });
         return result;
@@ -141,6 +191,9 @@ private:
     }
     Module createModule(ModuleName name) {
         auto m = new Module(config, name);
+        m.startToken = MODULE_TOKEN;
+        m.uid = 0;
+
         modules[name] = m;
 
         m.lex();

@@ -27,7 +27,7 @@ public:
      * name "=" "struct" "{" ( Function | Variable | Import ) "}"
      */
     @Implements("Statement")
-    override Statement parse(ParseState state) {
+    override Struct parse(ParseState state) {
 
         // name
         this.name = state.text(); state.next();
@@ -60,9 +60,9 @@ public:
     }
 
     @Implements("Statement")
-    override bool check() {
+    override void check() {
         // 1) ...
-        return super.check();
+        super.check();
     }
 
     @Implements("Statement")

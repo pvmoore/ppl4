@@ -23,20 +23,19 @@ public:
      * name = "import" ModuleName [ "." Symbol ]
      */
     @Implements("Statement")
-    override Statement parse(ParseState state) {
+    override Import parse(ParseState state) {
         todo();
         return this;
     }
 
     @Implements("Statement")
     override void resolve(ResolveState state) {
-        
+
     }
 
     @Implements("Statement")
-    override bool check() {
+    override void check() {
         // 1) ...
-        return true;
     }
 
     @Implements("Statement")

@@ -16,6 +16,12 @@ public:
         return false;
     }
 
+    override bool canImplicitlyCastTo(Type other) {
+        if(!.canImplicitlyCastTo(this, other)) return false;
+        
+        return false;
+    }
+
     override string toString() {
         return super.toString() ~ "StructType";
     }

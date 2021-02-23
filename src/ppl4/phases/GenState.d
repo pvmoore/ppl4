@@ -6,52 +6,40 @@ final class GenState {
 public:
     Module mod;
     LLVMWrapper llvm;
+    LLVMPassManager passManager;
     LLVMBuilder builder;
+    Writer writer;
     LLVMValueRef lhs;
     LLVMValueRef rhs;
     LLVMBasicBlockRef currentBlock;
 
-    this(LLVMWrapper llvm, Module mod) {
+    this(LLVMWrapper llvm, Writer writer, Module mod) {
         this.llvm = llvm;
+        this.writer = writer;
         this.builder = llvm.builder;
         this.mod = mod;
+        this.passManager = llvm.passManager;
+
+        passManager.addPassesO3();
     }
     bool success() {
         return true;
     }
-    void writeLL(Directory subdir) {
-        if(mod.config.writeIR) {
-            auto path = FileNameAndDirectory(
-                mod.name.toFileName().withExtension(".ll"),
-                mod.config.output.directory.add(subdir));
-            info("writeLL %s", path);
-            mod.llvmValue.writeToFileLL(path.toString());
-        }
-    }
-    bool writeASM() {
-        if(mod.config.writeASM) {
-            auto path = FileNameAndDirectory(
-                mod.name.toFileName().withExtension(".asm"),
-                mod.config.output.directory);
-            info("writeASM %s", path);
-            if(!llvm.x86Target.writeToFileASM(mod.llvmValue, path.toString())) {
-                warn("failed to write ASM %s", path);
-                return false;
-            }
-        }
-        return true;
-    }
-    bool verify() {
+    void verify() {
         trace("Verifying %s", mod.name);
         if(!mod.llvmValue.verify()) {
             warn("=======================================");
             mod.llvmValue.dump();
             warn("=======================================");
             warn("module %s is invalid", mod.name);
-            return false;
+            throw new VerifyError();
         }
-        trace("finished verifying");
-        return true;
+    }
+    void writeLL(Directory subdir) {
+        writer.writeLL(mod, subdir);
+    }
+    void optimise() {
+        passManager.runOnModule(mod.llvmValue);
     }
     void moveToBlock(LLVMBasicBlockRef label) {
         builder.positionAtEndOf(label);

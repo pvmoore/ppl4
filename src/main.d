@@ -18,9 +18,10 @@ int main(string[] args) {
     c.compile();
 
     if(c.hasErrors()) {
-        writefln("Fail");
 
         auto errors = c.getErrors();
+
+        writefln("");
 
         foreach(e; errors) {
             writefln("%s", e);

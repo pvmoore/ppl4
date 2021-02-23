@@ -21,7 +21,7 @@ putchar = extern fn(a:int) : int
     // public properties can be set in the constructor
     // eg. Animal(a:0, b:true)
 
-    + a : int       // = 1 // default if no value passed
+    + a : int = 1       // default if no value passed
     + b : bool
     c   : float
     d   : double
@@ -42,7 +42,7 @@ putchar = extern fn(a:int) : int
 + main = fn {
      //a = 0
      //a := 1
-    return
+    return 0
 }
 
 // need to do a scan for public declarations after lexing

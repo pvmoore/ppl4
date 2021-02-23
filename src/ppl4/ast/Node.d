@@ -18,6 +18,7 @@ protected:
 public:
     Statement[] children;
     Statement parent;
+    int uid;    // unique id per Module
 
     abstract NodeId id();
 

@@ -27,7 +27,7 @@ public:
      * name "=" Expression
      */
     @Implements("Statement")
-    override Statement parse(ParseState state) {
+    override Variable parse(ParseState state) {
 
         // + (public)
         if(state.isKind(TokenKind.PLUS)) {
@@ -50,7 +50,7 @@ public:
         if(state.isKind(TokenKind.EQUALS)) {
             state.next();
 
-            add(parseExpression(state));
+            add(parseExpression(state, this));
         }
 
         return this;
@@ -68,15 +68,15 @@ public:
     }
 
     @Implements("Statement")
-    override bool check() {
+    override void check() {
         // 1) name must not be duplicate or shadow
         // 2) ...
-        return super.check();
+        super.check();
     }
 
     @Implements("Statement")
     override void generate(GenState state) {
-
+        super.generate(state);
     }
 
     override string toString() {

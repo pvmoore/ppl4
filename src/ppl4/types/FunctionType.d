@@ -22,7 +22,12 @@ public:
     }
 
     override bool exactlyMatches(Type other) {
-        todo();
+        if(!.canImplicitlyCastTo(this, other)) return false;
+        
+        return false;
+    }
+
+    override bool canImplicitlyCastTo(Type other) {
         return false;
     }
 

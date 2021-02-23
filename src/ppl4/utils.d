@@ -24,3 +24,4 @@ string typeString(Type[] types) {
     }
     return s;
 }
+

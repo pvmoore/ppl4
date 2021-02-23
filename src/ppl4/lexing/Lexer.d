@@ -153,6 +153,7 @@ private:
     auto determineTokenKind(string t) {
         if(t[0]=='/' && t[1]=='/') return TokenKind.L_COMMENT;
         if(t[0]=='/' && t[1]=='*') return TokenKind.ML_COMMENT;
+        if(t[0] >= '0' && t[0] <= '9') return TokenKind.NUMBER;
         return TokenKind.IDENTIFIER;
     }
     void doAddToken(TokenKind k, string text) {

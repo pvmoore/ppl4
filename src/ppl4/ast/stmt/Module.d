@@ -8,7 +8,6 @@ import ppl4.all;
  */
 final class Module : Statement {
 private:
-
 public:
     ModuleName name;
     Config config;
@@ -48,14 +47,12 @@ public:
      * Struct | Class | Enum | Function | Variable | Import
      */
     @Implements("Statement")
-    override Statement parse(ParseState state) {
-        with(TokenKind) {
+    override Module parse(ParseState state) {
 
-            while(!state.isEOF()) {
-                super.parse(state);
-            }
-
+        while(!state.isEOF()) {
+            super.parse(state);
         }
+
         trace("--------------------");
         dump();
         trace("--------------------");
@@ -68,21 +65,15 @@ public:
     @Implements("Statement")
     override void resolve(ResolveState state) {
         this.isResolved = true;
-
-
         super.resolve(state);
-
-        trace("--------------------");
-        dump();
-        trace("--------------------");
     }
     /**
      * @return true if ...
      */
     @Implements("Statement")
-    override bool check() {
+    override void check() {
         // Nothing to do
-        return super.check();
+        super.check();
     }
 
     /**
@@ -108,11 +99,13 @@ public:
         auto structs = collectChildren!Struct;
         // Generate Enums
 
-
-
         super.generate(state);
 
         state.writeLL(Directory("ir"));
+        state.verify();
+
+        state.optimise();
+        state.writeLL(Directory("ir_opt"));
         state.verify();
     }
 

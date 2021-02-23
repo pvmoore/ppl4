@@ -2,30 +2,18 @@ module ppl4.phases.ParseState;
 
 import ppl4.all;
 
-final class ParseState {
+final class ParseState : AbsNodeMaker {
 private:
     int pos;
     Token[] tokens;
 public:
-    Module mod;
-
     this(Module mod, Token[] tokens) {
-        this.mod = mod;
+        super(mod);
         this.tokens = tokens;
     }
 
-    T make(T)(bool isPublic = true) {
-        import std.traits;
-
-        T instance;
-
-        static if(is(T==Function) || is(T==Variable) || is(T==Struct)) {
-            instance = new T(mod, isPublic);
-        } else {
-            instance = new T(mod);
-        }
-        instance.startToken = peek();
-        return instance;
+    override Token getStartToken() {
+        return peek();
     }
 
     Token peek(int i = 0) {

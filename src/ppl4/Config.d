@@ -13,6 +13,11 @@ public:
     bool writeOBJ = true;
     bool isDebug = true;
     string subsystem = "console";
+    string[] libs;
+
+    string programEntryName() {
+        return "console" == subsystem ? "main" : "winMain";
+    }
 
     this(string directory, string mainFilename) {
         this.directory = Directory(directory);
@@ -28,7 +33,30 @@ public:
         return this;
     }
     string[] getExternalLibs() {
-        return null;
+        if(isDebug) {
+            string[] dynamicRuntime = [
+                "msvcrtd.lib",
+                "ucrtd.lib",
+                "vcruntimed.lib"
+            ];
+            //string[] staticRuntime = [
+            //    "libcmt.lib",
+            //    "libucrt.lib",
+            //    "libvcruntime.lib"
+            //];
+            return dynamicRuntime ~ libs;
+        }
+        string[] dynamicRuntime = [
+            "msvcrt.lib",
+            "ucrt.lib",
+            "vcruntime.lib"
+        ];
+        //string[] staticRuntime = [
+        //    "libcmt.lib",
+        //    "libucrt.lib",
+        //    "libvcruntime.lib"
+        //];
+        return dynamicRuntime ~ libs;
     }
     auto getFullPath(ModuleName name) {
         return FileNameAndDirectory(name.toFileName(), directory);

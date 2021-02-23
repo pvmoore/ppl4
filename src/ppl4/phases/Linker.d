@@ -5,12 +5,14 @@ import ppl4.all;
 final class Linker {
 private:
     LLVMWrapper llvm;
+    Writer writer;
     Config config;
     Module mainModule;
     FileName outName;
 public:
-    this(LLVMWrapper llvm, Config config, Module mainModule) {
+    this(LLVMWrapper llvm, Writer writer, Config config, Module mainModule) {
         this.llvm = llvm;
+        this.writer = writer;
         this.config = config;
         this.mainModule = mainModule;
         this.outName = mainModule.name.toFileName();
@@ -19,7 +21,7 @@ public:
         auto obj = getFilename(".obj");
         auto exe = getFilename(".exe");
 
-        writeOBJ(obj);
+        writer.writeOBJ(mainModule, obj);
 
         auto args = createArgs(obj, exe);
 
@@ -31,14 +33,6 @@ private:
     string getFilename(string ext) {
         auto name = outName.withExtension(ext);
         return config.output.directory.value ~ name.value;
-    }
-    bool writeOBJ(string filename) {
-        info("writeOBJ %s", filename);
-        if(!llvm.x86Target.writeToFileOBJ(mainModule.llvmValue, filename)) {
-            warn("failed to write OBJ %s", filename);
-            return false;
-        }
-        return true;
     }
     string[] createArgs(string obj, string exe) {
         auto args = [
@@ -70,7 +64,7 @@ private:
 
         args ~= config.getExternalLibs();
 
-        trace("link command: %s", args);
+        //trace("link command: %s", args);
         return args;
     }
     void executeLinker(string[] args, string obj) {

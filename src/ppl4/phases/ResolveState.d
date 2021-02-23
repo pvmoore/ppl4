@@ -2,15 +2,23 @@ module ppl4.phases.ResolveState;
 
 import ppl4.all;
 
-final class ResolveState {
+final class ResolveState : AbsNodeMaker {
 private:
-    Module mod;
     Statement[] _unresolved;
+    int[] prevUnresolvedNodeUids;
 public:
     this(Module mod) {
-        this.mod = mod;
+        super(mod);
     }
+
+    override Token getStartToken() {
+        return mod.startToken;
+    }
+
     void reset() {
+        prevUnresolvedNodeUids = _unresolved.map!(it=>it.uid).array().sort().array();
+        info("prev = %s", prevUnresolvedNodeUids);
+        sort(prevUnresolvedNodeUids);
         _unresolved.length = 0;
     }
     bool success() {

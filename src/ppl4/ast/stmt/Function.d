@@ -26,7 +26,7 @@ public:
         expect(isResolved);
         if(numParams==0) return name;
         string s;
-        return "%s(%s)".format(name, typeString(paramTypes));
+        return "%s|%s".format(name, typeString(paramTypes));
     }
     LLVMCallConv callingConvention() {
         if(isExtern) return LLVMCallConv.LLVMCCallConv;
@@ -48,7 +48,7 @@ public:
      * name "=" "fn" "(" { Variable } ")" [ ":" Type ] "{" { Statement } "}"
      */
     @Implements("Statement")
-    override Statement parse(ParseState state) {
+    override Function parse(ParseState state) {
 
         // name
         this.name = state.text(); state.next();
@@ -93,7 +93,7 @@ public:
 
             this.returnType = parseType(state);
         } else {
-            this.returnType = UNKNOWN;
+            this.returnType = UNKNOWN_TYPE;
         }
 
         // {
@@ -122,26 +122,17 @@ public:
     @Implements("Statement")
     override void resolve(ResolveState state) {
         if(!isResolved) {
-            if("console" == mod.config.subsystem) {
-                if("main" == name) {
-                    isProgramEntry = true;
-                }
-            } else {
-                if("winMain" == name) {
-                    isProgramEntry = true;
-                }
-            }
-
+            resolveIsProgramEntry();
             resolveReturnType();
-
-            if(returnType.kind == TypeKind.VOID && !returnType.isPtr()) {
-                if(!hasChildren() || !last().isA!Return) {
-                    add(new Return(mod));
-                }
-            }
 
             if(returnType.isResolved()) {
                 this.isResolved = true;
+
+                if(returnType.kind == TypeKind.VOID && !returnType.isPtr()) {
+                    if(!hasChildren() || !last().isA!Return) {
+                        add(state.make!Return());
+                    }
+                }
             } else {
                 state.unresolved(this);
             }
@@ -150,9 +141,11 @@ public:
     }
 
     @Implements("Statement")
-    override bool check() {
-        // 1) ...
-        return super.check();
+    override void check() {
+        if(isProgramEntry && !returnType.exactlyMatches(INT)) {
+            entryFuncReturnTypeShouldBeInt(this);
+        }
+        super.check();
     }
 
     @Implements("Statement")
@@ -176,6 +169,11 @@ public:
         return "Function%s '%s'%s%s%s".format(isPublic ? "(+)":"", name, p, ex, rt);
     }
 private:
+    void resolveIsProgramEntry() {
+        if(name == mod.config.programEntryName()) {
+            isProgramEntry = true;
+        }
+    }
     /**
      * Collect all return Expressions and try to determine a returnType
      */
@@ -202,7 +200,15 @@ private:
             return;
         }
 
-        todo("Determine return type");
+        // Get all types are attempt to find the largest Type.
+        // All types must be resolved before we do this
+        Type[] types = exprs.map!(it=>it.type()).array;
+        if(!types.areResolved()) return;
+
+        this.returnType = getBestFit(types);
+        if(!returnType.isResolved()) {
+            returnTypeMismatch(this);
+        }
     }
     void doGenerateDecl() {
         this.llvmValue = mod.llvmValue.addFunction(
@@ -211,7 +217,7 @@ private:
             paramTypes().map!(it=>it.getLLVMType()).array,
             callingConvention()
         );
-        info("f = %s", llvmValue.toString());
+        //info("f = %s", llvmValue.toString());
 
         // inline | noinline
         bool isInline   = false;

@@ -20,7 +20,7 @@ public:
     override Type type() { return _type; }
 
     @Implements("Statement")
-    override Statement parse(ParseState state) {
+    override TypeReference parse(ParseState state) {
         todo();
         return this;
     }
@@ -33,9 +33,8 @@ public:
     }
 
     @Implements("Statement")
-    override bool check() {
+    override void check() {
         // 1) ...
-        return true;
     }
 
     @Implements("Statement")

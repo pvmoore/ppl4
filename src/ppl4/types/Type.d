@@ -11,21 +11,20 @@ abstract class Type {
         this.ptrDepth = ptrDepth;
     }
 
-    final bool isPtr() {
-        return ptrDepth > 0;
-    }
-    final bool isReal() {
-        return kind.isOneOf(TypeKind.FLOAT, TypeKind.DOUBLE);
-    }
-    final bool isInteger() {
-        return kind.isOneOf(TypeKind.BYTE, TypeKind.SHORT, TypeKind.INT, TypeKind.LONG);
-    }
+    final bool isPtr() { return ptrDepth > 0; }
+    final bool isBool() { return kind == TypeKind.BOOL; }
+    final bool isVoid() { return kind == TypeKind.VOID; }
+    final bool isReal() { return kind.isOneOf(TypeKind.FLOAT, TypeKind.DOUBLE); }
+    final bool isInteger() { with(TypeKind) return kind.isOneOf(BYTE, SHORT, INT, LONG); }
+    final bool isStruct() { return kind == TypeKind.STRUCT; }
+    final bool isClassPtr() { return kind == TypeKind.CLASS_PTR; }
+    final bool isFunctionPtr() { return kind == TypeKind.FUNCTION_PTR; }
+    final bool isVoidPtr() { return isVoid() && isPtr(); }
 
-    bool isResolved() {
-        return kind != TypeKind.UNKNOWN;
-    }
+    bool isResolved() { return kind != TypeKind.UNKNOWN; }
 
     abstract bool exactlyMatches(Type other);
+    abstract bool canImplicitlyCastTo(Type other);
 
     /**
      * @return a new resolved Type or this.

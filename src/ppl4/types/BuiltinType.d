@@ -14,6 +14,22 @@ public:
         return kind == other.kind && ptrDepth == other.ptrDepth;
     }
 
+    override bool canImplicitlyCastTo(Type other) {
+        if(!.canImplicitlyCastTo(this, other)) return false;
+
+        if(!other.isA!BuiltinType) return false;
+
+        auto right = other.as!BuiltinType;
+
+        if(isVoid() || right.isVoid()) return false;
+
+        if(isReal()==right.isReal()) {
+            /// Allow bool -> any other BasicType
+            return kind <= right.kind;
+        }
+        return right.isReal();
+    }
+
     override string toString() {
         return super.toString() ~ kind.toString();
     }

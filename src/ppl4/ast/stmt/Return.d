@@ -24,13 +24,13 @@ public:
      *  "return" [ Expression ]
      */
     @Implements("Statement")
-    override Statement parse(ParseState state) {
+    override Return parse(ParseState state) {
 
         // return
         state.skip("return");
 
         if(!state.isNewLine()) {
-            add(parseExpression(state));
+            add(parseExpression(state, this));
         }
 
         return this;
@@ -39,15 +39,13 @@ public:
     @Implements("Statement")
     override void resolve(ResolveState state) {
         this.isResolved = true;
-        if(hasChildren()) {
-            first().resolve(state);
-        }
+        super.resolve(state);
     }
 
     @Implements("Statement")
-    override bool check() {
+    override void check() {
         // Nothing to do
-        return super.check();
+        super.check();
     }
 
     @Implements("Statement")
