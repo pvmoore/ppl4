@@ -70,7 +70,7 @@ public:
         foreach(k; kinds) {
             if(kk==k) return;
         }
-        syntaxError(this);
+        syntaxError(this, "Expected one of %s".format(kinds));
     }
 private:
     void move() {

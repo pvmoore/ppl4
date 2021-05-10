@@ -37,46 +37,111 @@ public:
                     pos++;
                 }
                 bufStart = pos;
-            } else switch(c) {
+            } else switch(c) with(TokenKind) {
                 case '=':
-                    addToken(TokenKind.EQUALS);
+                    if(peek(1)=='=') {
+                        addToken(DBL_EQUALS);
+                    } else {
+                        addToken(EQUALS);
+                    }
+                    break;
+                case '<':
+                    if(peek(1)=='=') {
+                        addToken(LARROW_EQ);
+                    } else {
+                        addToken(LARROW);
+                    }
+                    break;
+                case '>':
+                    if(peek(1)=='=') {
+                        addToken(RARROW_EQ);
+                    } else {
+                        addToken(RARROW);
+                    }
+                    break;
+                case '!':
+                    if(peek(1)=='=') {
+                        addToken(BANG_EQUALS);
+                    }
                     break;
                 case ':':
                     if(peek(1)=='=') {
-                        addToken(TokenKind.ASSIGN);
+                        addToken(COLON_EQUALS);
                     } else {
-                        addToken(TokenKind.COLON);
+                        addToken(COLON);
                     }
                     break;
                 case ',':
-                    addToken(TokenKind.COMMA);
+                    addToken(COMMA);
                     break;
                 case '+':
-                    addToken(TokenKind.PLUS);
+                    if(peek(1)=='=') {
+                        addToken(PLUS_EQ);
+                    } else {
+                        addToken(PLUS);
+                    }
                     break;
                 case '-':
-                    addToken(TokenKind.MINUS);
+                    if(bufStart==0 && peek(1)>='0' && peek(1)<='9') {
+                        // negative number
+                        pos++;
+                    } else if(peek(1)=='=') {
+                        addToken(MINUS_EQ);
+                    } else {
+                        addToken(MINUS);
+                    }
+                    break;
+                case '*':
+                    if(peek(1)=='=') {
+                        addToken(ASTERISK_EQ);
+                    } else {
+                        addToken(ASTERISK);
+                    }
                     break;
                 case '/':
                     if(peek(1)=='*') {
                         parseMLComment();
                     } else if(peek(1)=='/') {
                         parseLComment();
+                    } else if(peek(1)=='=') {
+                        addToken(FSLASH_EQ);
                     } else {
-                        addToken(TokenKind.DIV);
+                        addToken(FSLASH);
                     }
                     break;
+                case '%':
+                    if(peek(1)=='=') {
+                        addToken(PERCENT_EQ);
+                    } else {
+                        addToken(PERCENT);
+                    }
+                    break;
+                case '|':
+                    addToken(PIPE);
+                    break;
+                case '&':
+                    addToken(AMPERSAND);
+                    break;
+                case '^':
+                    addToken(HAT);
+                    break;
                 case '{':
-                    addToken(TokenKind.LCURLY);
+                    addToken(LCURLY);
                     break;
                 case '}':
-                    addToken(TokenKind.RCURLY);
+                    addToken(RCURLY);
                     break;
                 case '(':
-                    addToken(TokenKind.LBRACKET);
+                    addToken(LBRACKET);
                     break;
                 case ')':
-                    addToken(TokenKind.RBRACKET);
+                    addToken(RBRACKET);
+                    break;
+                case '[':
+                    addToken(LSQUARE);
+                    break;
+                case ']':
+                    addToken(RSQUARE);
                     break;
                 default:
                     pos++;
@@ -163,7 +228,7 @@ private:
         Token t = {
             kind: k,
             text: text,
-            start: pos,
+            start: bufStart,
             length: pos - bufStart,
             line: ln,
             column: column

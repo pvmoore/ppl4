@@ -24,6 +24,18 @@ bool areResolved(Type[] types) {
     return true;
 }
 
+/**
+ * "Type,Type,Type" etc...
+ */
+string typeString(Type[] types) {
+    string s;
+    foreach(i, t; types) {
+        if(i>0) s~=",";
+        s ~= t.toString();
+    }
+    return s;
+}
+
 bool canImplicitlyCastTo(Type left, Type right) {
     if(!left.isResolved() || !right.isResolved()) return false;
     if(left.ptrDepth != right.ptrDepth) return false;
@@ -58,15 +70,11 @@ Type getBestFit(Type a, Type b) {
     //     // todo - some clever logic here
     //     return UNKNOWN_TYPE;
     // }
-    if(a.isClassPtr() || b.isClassPtr()) {
-        // todo - some clever logic here
-        return UNKNOWN_TYPE;
-    }
     if(a.isStruct() || b.isStruct()) {
         // todo - some clever logic here
         return UNKNOWN_TYPE;
     }
-    if(a.isFunctionPtr() || b.isFunctionPtr()) {
+    if(a.isFunction() || b.isFunction()) {
         return UNKNOWN_TYPE;
     }
     // if(a.isArray || b.isArray) {
@@ -97,6 +105,45 @@ Type getBestFit(Type[] types) {
         }
     }
     return t;
+}
+
+bool isBuiltinType(ParseState state) {
+    string s;
+    for(int i = 0; true; i++) {
+        s = state.peek(i).text;
+        if("ref" != s) break;
+        i++;
+    }
+
+    switch(s) {
+        case "bool":
+        case "byte":
+        case "short":
+        case "int":
+        case "float":
+        case "long":
+        case "double":
+        case "void":
+            return true;
+        default:
+            return false;
+    }
+    assert(false);
+}
+
+bool isType(ParseState state) {
+    if(isBuiltinType(state)) return true;
+
+    string s;
+    for(int i = 0; true; i++) {
+        s = state.peek(i).text;
+        if("ref" != s) break;
+        i++;
+    }
+
+    if(state.mod.declaresType(s, true)) return true;
+
+    return false;
 }
 
 /**
@@ -142,8 +189,14 @@ Type parseType(ParseState state) {
             t = new FunctionType().parse(state);
             break;
         default:
+            trace("struct");
             // struct, class, enum
-            t = new UnresolvedType().parse(state);
+            auto s = state.mod.getStruct(state.text());
+            if(s) {
+                t = new StructType(s);
+            } else {
+                t = new UnresolvedType(state.text());
+            }
             break;
     }
     if(t) {

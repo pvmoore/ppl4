@@ -10,11 +10,13 @@ private:
     ulong parseTime, resolveTime, checkTime, generateTime, linkTime;
     LLVMWrapper llvm;
     Writer writer;
+    Resolver resolver;
 public:
     this(Config config) {
         this.config = config;
         this.llvm = new LLVMWrapper;
-        this.writer = new Writer(llvm);
+        this.writer = new Writer(llvm, config);
+        this.resolver = new Resolver(this, writer);
     }
     void compile() {
         scope(exit) destroy();
@@ -62,8 +64,8 @@ public:
     bool hasErrors() {
         return getErrors().length > 0;
     }
-    CompileError[] getErrors() {
-        CompileError[] e;
+    CompilationError[] getErrors() {
+        CompilationError[] e;
         foreach(m; modules) {
             e ~= m.errors;
         }
@@ -82,7 +84,7 @@ public:
     }
 private:
     void parsePhase() {
-        info("Parse phase");
+        info("★ Parse phase");
         parseTime += time((){
             foreach(m; modules) {
                 m.parse(new ParseState(m, m.tokens));
@@ -90,57 +92,11 @@ private:
         });
     }
     bool resolvePhase() {
-        info("Resolve phase");
-
-        bool result = true;
-        resolveTime += time(() {
-            ResolveState[ModuleName] states;
-
-            foreach(m; modules.values()) {
-                states[m.name] = new ResolveState(m);
-            }
-
-            foreach(pass; 0..2) {
-                trace("pass %s", pass);
-                result = true;
-
-                // todo - parallel foreach here
-                foreach(m; modules.values()) {
-                    auto state = states[m.name];
-                    m.resolve(state);
-                    result &= state.success();
-                }
-
-                if(!result) {
-                    trace("===================================================");
-                    auto total = states.values().map!(it=>it.getNumUnresolved()).sum();
-                    trace("    %s unresolved", total);
-
-                    foreach(state; states.values()) {
-                        if(!state.success()) {
-                            foreach(i, stmt; state.getUnresolvedStatements()) {
-                                info("    [%s][%s] %s", stmt.mod, i, stmt);
-                            }
-                        }
-
-                        trace("--------------------");
-                        state.mod.dump();
-                        trace("--------------------");
-                    }
-                    trace("===================================================");
-
-                    foreach(state; states.values()) {
-                        state.reset();
-                    }
-                } else {
-                    break;
-                }
-            }
-        });
-        return result;
+        info("★ Resolve phase");
+        return resolver.resolve(modules.values()) == 0;
     }
     bool checkPhase() {
-        info("Check phase");
+        info("★ Check phase");
         checkTime += time(() {
             foreach(m; modules) {
                 m.check();
@@ -149,7 +105,7 @@ private:
         return !hasErrors();
     }
     bool generatePhase() {
-        info("Generate phase");
+        info("★ Generate phase");
         bool result = true;
         generateTime += time(() {
             foreach(m; modules) {
@@ -157,26 +113,28 @@ private:
                 m.generate(state);
                 result &= state.success();
             }
+
+            if(result) {
+                // Create one merged module and optimise it
+                auto otherModules = modules.values()
+                                        .filter!(it=>it !is mainModule)
+                                        .map!(it=>it.llvmValue)
+                                        .array();
+
+                if(otherModules.length > 0) {
+                    llvm.linkModules(mainModule.llvmValue, otherModules);
+                    llvm.passManager.runOnModule(mainModule.llvmValue);
+                    writer.writeLL(mainModule, Directory(""));
+                }
+            }
         });
         return result;
     }
     bool linkPhase() {
-        info("Link phase");
+        info("★ Link phase");
 
         bool result;
         linkTime += time(() {
-            // Create one merged module and optimise it
-            auto otherModules = modules.values()
-                                       .filter!(it=>it !is mainModule)
-                                       .map!(it=>it.llvmValue)
-                                       .array();
-
-            if(otherModules.length > 0) {
-                llvm.linkModules(mainModule.llvmValue, otherModules);
-                llvm.passManager.runOnModule(mainModule.llvmValue);
-                writer.writeLL(mainModule, Directory(""));
-            }
-
             auto linker = new Linker(llvm, writer, config, mainModule);
             result = linker.link();
         });
@@ -190,7 +148,7 @@ private:
         return *p;
     }
     Module createModule(ModuleName name) {
-        auto m = new Module(config, name);
+        auto m = new Module(config, writer, name);
         m.startToken = MODULE_TOKEN;
         m.uid = 0;
 

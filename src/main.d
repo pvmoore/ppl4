@@ -19,16 +19,16 @@ int main(string[] args) {
 
     if(c.hasErrors()) {
 
+        writefln("\n❌\n");
+
         auto errors = c.getErrors();
 
-        writefln("");
-
         foreach(e; errors) {
-            writefln("%s", e);
+            writefln("➝ %s", e);
         }
 
     } else {
-        writefln("Ok");
+        writefln("\n✅");
         auto r = c.getReport();
         writefln("\n%s", r);
     }

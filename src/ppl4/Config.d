@@ -8,6 +8,8 @@ public:
     FileName mainFilename;
     Directory directory;
     FileNameAndDirectory output;
+    bool writeTokens = true;
+    bool writeAST = true;
     bool writeIR = true;
     bool writeASM = true;
     bool writeOBJ = true;

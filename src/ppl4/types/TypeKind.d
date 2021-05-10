@@ -14,10 +14,9 @@ enum TypeKind {
 
     VOID,
 
-    STRUCT,
+    STRUCT, // struct or class
 
-    CLASS_PTR,
-    FUNCTION_PTR
+    FUNCTION
 }
 
 string toString(TypeKind k) {
@@ -35,7 +34,6 @@ string toString(TypeKind k) {
 
         case STRUCT: return "struct";
 
-        case CLASS_PTR: return "class";
-        case FUNCTION_PTR: return "fn*";
+        case FUNCTION: return "fn";
     }
 }

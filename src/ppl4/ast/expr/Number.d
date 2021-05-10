@@ -23,6 +23,9 @@ public:
     @Implements("Expression")
     override Type type() { return _type; }
 
+    @Implements("Expression")
+    override int precedence() { return precedenceOf(Operator.NUMBER); }
+
     @Implements("Statement")
     override Number parse(ParseState state) {
         this.valueStr = state.text(); state.next();
@@ -36,7 +39,7 @@ public:
             if(t[0].isResolved()) {
                 this._type    = t[0];
                 this.valueStr = t[1];
-                this.isResolved = true;
+                setResolved();
                 this.value = new Value(this);
             } else {
                 state.unresolved(this);

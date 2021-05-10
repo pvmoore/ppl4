@@ -26,7 +26,7 @@ public:
         return true;
     }
     void verify() {
-        trace("Verifying %s", mod.name);
+        //trace("Verifying %s", mod.name);
         if(!mod.llvmValue.verify()) {
             warn("=======================================");
             mod.llvmValue.dump();
@@ -41,13 +41,25 @@ public:
     void optimise() {
         passManager.runOnModule(mod.llvmValue);
     }
+    LLVMBasicBlockRef createBlock(Statement n, string name) {
+        auto func = n.ancestor!Function();
+        assert(func);
+        return func.llvmValue.appendBasicBlock(name);
+    }
     void moveToBlock(LLVMBasicBlockRef label) {
         builder.positionAtEndOf(label);
         currentBlock = label;
     }
+    LLVMValueRef castI1ToI8(LLVMValueRef v) {
+        if(v.isI1) {
+            return builder.sext(v, i8Type());
+        }
+        return v;
+    }
     LLVMValueRef castType(LLVMValueRef v, Type from, Type to, string name=null) {
         if(from.exactlyMatches(to)) return v;
-        //dd("cast", from, to);
+        //trace("cast %s -> %s", from, to);
+
         /// cast to different pointer type
         if(from.isPtr() && to.isPtr()) {
             rhs = builder.bitcast(v, to.getLLVMType(), name);
@@ -73,7 +85,7 @@ public:
             return rhs;
         }
         if(from.kind==TypeKind.UNKNOWN) {
-            error("!!!", from.kind, mod.name);
+            expect(false, "!!! %s %s".format(from.kind, mod.name));
         }
         /// widen or truncate
         if(from.size < to.size) {

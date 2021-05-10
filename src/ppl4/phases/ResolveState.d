@@ -6,6 +6,8 @@ final class ResolveState : AbsNodeMaker {
 private:
     Statement[] _unresolved;
     int[] prevUnresolvedNodeUids;
+    int iterations;
+    bool noProgressMade;
 public:
     this(Module mod) {
         super(mod);
@@ -16,9 +18,16 @@ public:
     }
 
     void reset() {
-        prevUnresolvedNodeUids = _unresolved.map!(it=>it.uid).array().sort().array();
-        info("prev = %s", prevUnresolvedNodeUids);
-        sort(prevUnresolvedNodeUids);
+        iterations++;
+        auto prev = _unresolved.map!(it=>it.uid).array().sort().array();
+        sort(prev);
+        trace("    %s curr = %s, prev = %s", mod, prev, prevUnresolvedNodeUids);
+
+        if(prev.length > 0 && prev == prevUnresolvedNodeUids) {
+            noProgressMade = true;
+            trace("        No progress");
+        }
+
         _unresolved.length = 0;
     }
     bool success() {
@@ -33,4 +42,7 @@ public:
     Statement[] getUnresolvedStatements() {
         return _unresolved;
     }
-}
+    bool isStalemate() {
+        return noProgressMade;
+    }
+ }

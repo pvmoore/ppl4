@@ -19,6 +19,9 @@ public:
     @Implements("Expression")
     override Type type() { return _type; }
 
+    @Implements("Expression")
+    override int precedence() { return precedenceOf(Operator.TYPE_REFERENCE); }
+
     @Implements("Statement")
     override TypeReference parse(ParseState state) {
         todo();

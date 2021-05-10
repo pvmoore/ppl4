@@ -42,13 +42,13 @@
             "problemMatcher": []
         },
         {
-            "label": "**** Copy extension ****",
+            "label": "**** Copy extensions ****",
             "type": "shell",
             "windows": {
-                "command": "xcopy /E /Y /Q . C:\\Users\\pvm_2\\.vscode\\extensions\\ppl4-language"
+                "command": "xcopy /E /Y /Q . C:\\Users\\pvm_2\\.vscode\\extensions"
             },
             "options": {
-                "cwd": "${workspaceFolder}/extensions/ppl4-language/"
+                "cwd": "${workspaceFolder}/extensions/"
             },
             "presentation": {
                 "reveal": "always",

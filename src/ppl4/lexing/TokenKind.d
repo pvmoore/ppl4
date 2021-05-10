@@ -11,28 +11,41 @@ enum TokenKind {
     L_COMMENT,
     ML_COMMENT,
 
-    COLON,      // :
-    COMMA,      // ,
-    EQUALS,     // =
-    ASSIGN,     // :=
-    DBL_EQUALS, // ==
+    COLON,          // :
+    COMMA,          // ,
+    EQUALS,         // =
+    COLON_EQUALS,   // :=
 
+    DBL_EQUALS,     // ==
+    BANG_EQUALS,     // !=
+    LARROW,         // <
+    RARROW,         // >
+    LARROW_EQ,      // <=
+    RARROW_EQ,      // >=
 
-    PLUS,       // +
-    MINUS,      // -
-    MUL,        // *
-    DIV,        // /
+    PLUS,           // +
+    MINUS,          // -
+    ASTERISK,       // *
+    FSLASH,         // /
+    PERCENT,        // %
+    PIPE,           // |
+    AMPERSAND,      // &
+    HAT,            // ^
 
-    PLUS_EQ,    // +=
-    MINUS_EQ,   // -=
-    MUL_EQ,     // *=
-    DIV_EQ,     // /=
+    PLUS_EQ,        // +=
+    MINUS_EQ,       // -=
+    ASTERISK_EQ,    // *=
+    FSLASH_EQ,      // /=
+    PERCENT_EQ,     // %=
 
-    BSLASH,     // \
-    LCURLY,     // {
-    RCURLY,     // }
-    LBRACKET,   // (
-    RBRACKET,   // )
+    BSLASH,         // \
+    LCURLY,         // {
+    RCURLY,         // }
+    LBRACKET,       // (
+    RBRACKET,       // )
+    LSQUARE,        // [
+    RSQUARE,        // ]
+
 
 }
 
@@ -53,22 +66,37 @@ string toString(TokenKind k) {
         case COLON: return ":";
         case COMMA: return ",";
         case EQUALS: return "=";
-        case ASSIGN: return ":=";
+        case COLON_EQUALS: return ":=";
+
         case DBL_EQUALS: return "==";
+        case BANG_EQUALS: return "!=";
+        case LARROW: return "<";
+        case RARROW: return ">";
+        case LARROW_EQ: return "<=";
+        case RARROW_EQ: return ">=";
+
         case PLUS: return "+";
         case MINUS: return "-";
-        case MUL: return "*";
-        case DIV: return "/";
+        case ASTERISK: return "*";
+        case FSLASH: return "/";
+        case PERCENT: return "%";
+
+        case PIPE: return "|";
+        case AMPERSAND: return "&";
+        case HAT: return "^";
 
         case PLUS_EQ: return "+=";
         case MINUS_EQ: return "-=";
-        case MUL_EQ: return "*=";
-        case DIV_EQ: return "/=";
+        case ASTERISK_EQ: return "*=";
+        case FSLASH_EQ: return "/=";
+        case PERCENT_EQ: return "%=";
 
         case BSLASH: return "\\";
         case LCURLY: return "{";
         case RCURLY: return "}";
         case LBRACKET: return "(";
         case RBRACKET: return ")";
+        case LSQUARE: return "[";
+        case RSQUARE: return "]";
     }
 }

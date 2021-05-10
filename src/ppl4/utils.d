@@ -16,12 +16,18 @@ T maxOf(T)(T a, T b) {
     return a > b ? a : b;
 }
 
-string typeString(Type[] types) {
-    string s;
-    foreach(i, t; types) {
-        if(i>0) s~=",";
-        s ~= t.toString();
-    }
-    return s;
+/// filter!(..).frontOrNull!Thing()
+T frontOrNull(T,Range)(Range r) {
+    return cast(T)(r.empty ? null : r.front);
 }
 
+string stringOf(LLVMValueRef value) {
+    return escape(value.toString());
+}
+string stringOf(LLVMTypeRef value) {
+    return escape(value.toString());
+}
+
+string escape(string s) {
+    return s.replace("%", "%%");
+}

@@ -18,6 +18,11 @@ public:
     @Implements("Node")
     override NodeId id() { return NodeId.IMPORT; }
 
+    @Implements("Statement")
+    override void findTarget(string name, ref ITarget[] targets, Expression src) {
+        todo("look in external Module");
+    }
+
     /**
      * "import" ModuleName [ "." Symbol ]
      * name = "import" ModuleName [ "." Symbol ]

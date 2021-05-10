@@ -17,8 +17,7 @@ abstract class Type {
     final bool isReal() { return kind.isOneOf(TypeKind.FLOAT, TypeKind.DOUBLE); }
     final bool isInteger() { with(TypeKind) return kind.isOneOf(BYTE, SHORT, INT, LONG); }
     final bool isStruct() { return kind == TypeKind.STRUCT; }
-    final bool isClassPtr() { return kind == TypeKind.CLASS_PTR; }
-    final bool isFunctionPtr() { return kind == TypeKind.FUNCTION_PTR; }
+    final bool isFunction() { return kind == TypeKind.FUNCTION; }
     final bool isVoidPtr() { return isVoid() && isPtr(); }
 
     bool isResolved() { return kind != TypeKind.UNKNOWN; }
@@ -50,8 +49,9 @@ abstract class Type {
             case DOUBLE: t = f64Type(); break;
             case VOID: t = voidType(); break;
             case STRUCT:
-            case CLASS_PTR:
-            case FUNCTION_PTR:
+                t = this.as!StructType.struct_.llvmType;
+                break;
+            case FUNCTION:
                 todo();
                 t = null;
                 break;
@@ -89,8 +89,7 @@ abstract class Type {
                 return 0;
             case UNKNOWN:
             case VOID:
-            case FUNCTION_PTR:
-            case CLASS_PTR:
+            case FUNCTION:
                 expect(false, "type kind is %s".format(kind));
                 break;
         }

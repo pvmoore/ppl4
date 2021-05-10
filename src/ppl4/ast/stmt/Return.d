@@ -30,7 +30,7 @@ public:
         state.skip("return");
 
         if(!state.isNewLine()) {
-            add(parseExpression(state, this));
+            parseExpression(state, this);
         }
 
         return this;
@@ -38,8 +38,16 @@ public:
 
     @Implements("Statement")
     override void resolve(ResolveState state) {
-        this.isResolved = true;
-        super.resolve(state);
+        if(isResolved) return;
+        if(hasChildren()) {
+            expr().resolve(state);
+            if(expr().isResolved) {
+                // Ensure the type is cast to the function type
+
+            }
+        } else {
+            setResolved();
+        }
     }
 
     @Implements("Statement")
@@ -51,10 +59,10 @@ public:
     @Implements("Statement")
     override void generate(GenState state) {
         auto func = ancestor!Function;
-        info("return %s", func);
+
         if(hasChildren()) {
             first().generate(state);
-            state.rhs = state.castType(state.rhs, expr().type(), func.returnType);
+
             state.builder.ret(state.rhs);
         } else {
             state.builder.retVoid();

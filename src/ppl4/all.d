@@ -23,13 +23,23 @@ import llvm.all;
 import ppl4.Config;
 import ppl4.logging;
 import ppl4.Compiler;
+import ppl4.ITarget;
+import ppl4.Operator;
 import ppl4.utils;
 import ppl4.version_;
 
 import ppl4.ast.Node;
 
+import ppl4.ast.expr.Assert;
+import ppl4.ast.expr.AtFunc;
+import ppl4.ast.expr.Binary;
+import ppl4.ast.expr.Call;
+import ppl4.ast.expr.Cast;
 import ppl4.ast.expr.Expression;
+import ppl4.ast.expr.Identifier;
+import ppl4.ast.expr.Null;
 import ppl4.ast.expr.Number;
+import ppl4.ast.expr.Parens;
 import ppl4.ast.expr.TypeReference;
 
 import ppl4.ast.stmt.Function;
@@ -40,7 +50,7 @@ import ppl4.ast.stmt.Statement;
 import ppl4.ast.stmt.Struct;
 import ppl4.ast.stmt.Variable;
 
-import ppl4.errors.CompileError;
+import ppl4.errors.CompilationError;
 import ppl4.errors.SyntaxError;
 import ppl4.errors.VerifyError;
 
@@ -55,6 +65,7 @@ import ppl4.phases.AbsNodeMaker;
 import ppl4.phases.GenState;
 import ppl4.phases.Linker;
 import ppl4.phases.ParseState;
+import ppl4.phases.Resolver;
 import ppl4.phases.ResolveState;
 import ppl4.phases.Writer;
 

@@ -11,20 +11,42 @@ private:
 public:
     ModuleName name;
     Config config;
+    Writer writer;
     Token[] tokens;
-    CompileError[] errors;
+    CompilationError[] errors;
     LLVMModule llvmValue;
 
-    this(Config config, ModuleName name) {
+    ScannerResults scan;
+
+    this(Config config, Writer writer, ModuleName name) {
         super(this);
         this.config = config;
+        this.writer = writer;
         this.name = name;
     }
 
-    @Implements("Node")
-    override NodeId id() { return NodeId.MODULE; }
+    Variable[] getVariables() {
+        return collectChildren!Variable;
+    }
+    Function[] getFunctions() {
+        return collectChildren!Function;
+    }
+    Function[] getFunctions(string name) {
+        return getFunctions.filter!(it=>it.name == name).array;
+    }
+    Struct[] getStructs() {
+        return collectChildren!Struct;
+    }
+    Struct getStruct(string name) {
+        return getStructs().filter!(it=>it.name == name).frontOrNull!Struct;
+    }
 
-    void addError(CompileError e) {
+    bool declaresType(string name, bool includingPrivate) {
+        return scan.containsStruct(name, includingPrivate) ||
+               scan.containsEnum(name, includingPrivate);
+    }
+
+    void addError(CompilationError e) {
         errors ~= e;
     }
 
@@ -35,12 +57,29 @@ public:
         auto lexer = new Lexer(this, cast(string)read(path.toString()));
         lexer.lex();
         this.tokens = lexer.getCodeTokens();
-        trace("tokens = %s", tokens.toString());
+        writer.writeTokens(this);
 
         auto scanner = new ModuleScanner(this);
-        scanner.scan();
+        this.scan = scanner.scan();
 
-        // get symbols from scanner here
+        trace(scan.toString());
+    }
+
+    @Implements("Node")
+    override NodeId id() { return NodeId.MODULE; }
+
+    @Implements("Statement")
+    override void findTarget(string name, ref ITarget[] targets, Expression src) {
+        foreach(t; collectChildren!ITarget) {
+            auto v = t.as!Variable;
+            auto f = t.as!Function;
+            if(v && v.name == name) {
+                targets ~= v;
+            } else if(f && f.name == name) {
+                targets ~= f;
+            }
+        }
+        super.findTarget(name, targets, src);
     }
 
     /**
@@ -53,9 +92,8 @@ public:
             super.parse(state);
         }
 
-        trace("--------------------");
-        dump();
-        trace("--------------------");
+        addInitFunction();
+
         return this;
     }
 
@@ -64,7 +102,7 @@ public:
      */
     @Implements("Statement")
     override void resolve(ResolveState state) {
-        this.isResolved = true;
+       setResolved();
         super.resolve(state);
     }
     /**
@@ -83,21 +121,29 @@ public:
     override void generate(GenState state) {
         this.llvmValue = state.llvm.createModule(name.value);
 
-        // Generate module scope strings
+        // TODO - Generate module scope strings
+
         // Generate module scope variables
         auto vars = collectChildren!Variable;
-
-        // Generate module scope functions
-        // Needs to be done first so that we have the decl LLVLValueRefs available
-        auto funcs = collectChildren!Function;
-        //trace("funcs = %s", funcs);
-        foreach(f; funcs) {
-            f.generateDecl();
+        foreach(v; vars) {
+            v.generateDeclaration();
         }
 
-        // Generate structs and classes
+        // TODO - Generate structs and classes
         auto structs = collectChildren!Struct;
-        // Generate Enums
+        foreach(s; structs) {
+            s.generateDeclaration();
+        }
+
+        // TODO - Generate Enums
+
+        // Generate module scope functions
+        auto funcs = collectChildren!Function;
+        foreach(f; funcs) {
+            f.generateDeclaration();
+        }
+
+
 
         super.generate(state);
 
@@ -113,5 +159,16 @@ public:
         return "Module '%s'".format(name);
     }
 protected:
+    /**
+     *  Add __init() if it does not exist
+     */
+    void addInitFunction() {
+        auto f = getFunctions("__init");
+        if(f.length==0) {
+            auto i = Function.make(mod, "__init", new FunctionType(null, VOID));
+            add(i);
+        } else {
 
+        }
+    }
 }

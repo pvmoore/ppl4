@@ -17,3 +17,4 @@ void warn(A...)(string fmt, A args) {
 void error(A...)(string fmt, A args) {
 	writefln("[ERROR] " ~ format(fmt, args));
 }
+

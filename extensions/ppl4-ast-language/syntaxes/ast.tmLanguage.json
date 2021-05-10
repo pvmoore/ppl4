@@ -1,0 +1,187 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "ast",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#function-calls"
+		},
+		{
+			"include" : "#line-comment"
+		},
+		{
+			"include" : "#block-comment"
+		},
+		{
+			"include" : "#number-literals"
+		},
+		{
+			"include" : "#user-defined-type"
+		},
+		{
+			"include" : "#terminator"
+		},
+		{
+			"include" : "#curly-brackets"
+		},
+		{
+			"include" : "#pipes"
+		},
+		{
+			"include" : "#colons"
+		}
+	],
+	"repository": {
+
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.ast",
+					"match": "\\b(var|const|if|while|return|throws|import|assert|not|is|as|and|or|else|break|continue|loop|select)\\b"
+				},
+				{
+					"name": "storage.type.ast",
+					"match": "\\b(ref|bool|byte|short|int|long|float|half|double|void|struct|class|enum|fn|alias)(\\*+|\\b)"
+				},
+				{
+					"name": "storage.modifier.public.ast",
+					"match": "\\b(Assert|AtFunc|Binary|Call|Cast|Identifier|Null|Number|Parens|TypeReference)(\\*+|\\b)"
+				},
+				{
+					"name": "keyword.control.ast",
+					"match": "\\b(Function|Import|Module|Return|Statement|Struct|Variable)(\\*+|\\b)"
+				},
+				{
+					"name" : "support.function.ast",
+					"match": "\\b(extern|static|returns|params)\\b"
+				},
+				{
+					"name" : "support.function.ast",
+					"match" : "@[_\\w]+\\b"
+				},
+				{
+					"name" : "entity.name.tag.ast",
+					"match" : "\\[\\[.*\\]\\]"
+				},
+				{
+					"name" : "entity.name.tag.ast",
+					"match" : "--[_a-zA-Z][_a-zA-Z0-9]+(\\s*=)?"
+				},
+				{
+					"name": "constant.numeric",
+					"match": "\\b(true|false|null)(\\**|\\b)"
+				},
+				{
+					"name": "entity.other.this.ast",
+					"match": "\\b(this)(\\**|\\b)"
+				}
+			]
+		},
+		"user-defined-type": {
+			"patterns": [
+				{
+					"match": "\\b([A-Z][_a-zA-Z0-9]+(\\*+|\\b|\\())",
+					"captures": {
+						"1" : {
+							"name" : "storage.type.user-defined.ast"
+						}
+					}
+				}
+			]
+		},
+		"function-calls": {
+			"patterns": [
+				{
+					"match": "\\b([_a-z][_a-zA-Z0-9]*)\\(",
+					"captures": {
+						"1" : {
+							"name" : "entity.name.function"
+						}
+					}
+				},
+				{
+					"match": "\\b(operator(\\[\\]|==|!=))\\(",
+					"captures": {
+						"1" : {
+							"name" : "entity.name.function"
+						}
+					}
+				}
+			]
+		},
+		"strings": {
+			"name": "string.quoted.double.ast",
+			"begin": "'",
+			"end": "'",
+			"patterns": [
+				{
+					"name": "constant.character.escape.ast",
+					"match": "\\\\."
+				}
+			]
+		},
+		"number-literals": {
+			"patterns": [
+				{
+					"name"  : "constant.numeric.float",
+					"match" : "\\b([\\d_]+\\.[\\d_]+(f|d|h)?)\\b"
+				},
+				{
+					"name"  : "constant.numeric",
+					"match" : "\\b[\\d_]+\\b"
+				},
+				{
+					"name"  : "constant.numeric.binary",
+					"match" : "\\b0b[0-1_]+\\b"
+				},
+				{
+					"name"  : "constant.numeric.hex",
+					"match" : "\\b0x[\\d_a-fA-F]+\\b"
+				}
+			]
+		},
+		"line-comment": {
+			"patterns": [{
+				"match": "//.*$",
+				"name": "comment.line.ast"
+			}]
+		},
+		"block-comment": {
+			"patterns": [{
+				"begin": "/\\*",
+				"end": "\\*/",
+				"name": "comment.block.ast"
+			}]
+		},
+		"terminator": {
+			"patterns": [{
+				"name"  : "punctuation.terminator",
+				"match" : ";"
+			}]
+		},
+		"curly-brackets": {
+			"patterns": [{
+				"name"  : "punctuation.curly-brackets",
+				"match" : "(\\{|\\})"
+			}]
+		},
+		"pipes": {
+			"patterns": [{
+				"name"  : "punctuation.pipe",
+				"match" : "\\|"
+			}]
+		},
+		"colons": {
+			"patterns": [{
+				"name"  : "punctuation.colon",
+				"match" : ":"
+			}]
+		}
+	},
+	"scopeName": "source.ast"
+}

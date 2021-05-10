@@ -13,7 +13,12 @@ public:
     Type returnType;
 
     this() {
-        super(TypeKind.FUNCTION_PTR, 1);
+        super(TypeKind.FUNCTION, 1);
+    }
+    this(Type[] params, Type returnType) {
+        this();
+        this.params = params;
+        this.returnType = returnType;
     }
 
     Type parse(ParseState state) {
@@ -23,7 +28,7 @@ public:
 
     override bool exactlyMatches(Type other) {
         if(!.canImplicitlyCastTo(this, other)) return false;
-        
+
         return false;
     }
 
@@ -32,6 +37,6 @@ public:
     }
 
     override string toString() {
-        return "FunctionType";
+        return "fn(%s):%s".format(typeString(params), returnType.toString());
     }
 }
