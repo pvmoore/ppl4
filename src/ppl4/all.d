@@ -28,6 +28,7 @@ import ppl4.Operator;
 import ppl4.utils;
 import ppl4.version_;
 
+import ppl4.ast.Module;
 import ppl4.ast.Node;
 
 import ppl4.ast.expr.Assert;
@@ -44,7 +45,6 @@ import ppl4.ast.expr.TypeReference;
 
 import ppl4.ast.stmt.Function;
 import ppl4.ast.stmt.Import;
-import ppl4.ast.stmt.Module;
 import ppl4.ast.stmt.Return;
 import ppl4.ast.stmt.Statement;
 import ppl4.ast.stmt.Struct;

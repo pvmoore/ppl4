@@ -1,4 +1,4 @@
-module ppl4.ast.stmt.Module;
+module ppl4.ast.Module;
 
 import ppl4.all;
 
@@ -6,7 +6,7 @@ import ppl4.all;
  *  Module
  *      { Statement }
  */
-final class Module : Statement {
+final class Module : Node {
 private:
 public:
     ModuleName name;
@@ -19,7 +19,6 @@ public:
     ScannerResults scan;
 
     this(Config config, Writer writer, ModuleName name) {
-        super(this);
         this.config = config;
         this.writer = writer;
         this.name = name;
@@ -70,6 +69,7 @@ public:
 
     @Implements("Node")
     override void findTarget(string name, ref ITarget[] targets, Expression src) {
+        trace("MODULE findTarget");
         foreach(t; collectChildren!ITarget) {
             auto v = t.as!Variable;
             auto f = t.as!Function;
@@ -165,7 +165,7 @@ protected:
     void addInitFunction() {
         auto f = getFunctions("__init");
         if(f.length==0) {
-            auto i = Function.make(mod, "__init", new FunctionType(null, VOID));
+            auto i = Function.make(this, "__init", new FunctionType(null, VOID));
             add(i);
         } else {
 

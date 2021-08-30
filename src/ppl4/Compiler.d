@@ -149,7 +149,7 @@ private:
     }
     Module createModule(ModuleName name) {
         auto m = new Module(config, writer, name);
-        m.startToken = MODULE_TOKEN;
+        //m.startToken = MODULE_TOKEN;
         m.uid = 0;
 
         modules[name] = m;

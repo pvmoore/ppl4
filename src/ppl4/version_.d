@@ -2,7 +2,7 @@ module ppl4.version_;
 
 import ppl4.all;
 
-const VERSION = "0.1.2";
+const VERSION = "0.1.4";
 
 /**
 
@@ -14,8 +14,10 @@ Currently working on:
     Constructor
 
 
-
+0.1.4 -
+0.1.3 - Make Module a Node rather than a Statement
 0.1.2 - Use Filename, Directory and Filepath from common
+      - Move some code from Statement to Node
 0.1.1 - Initial generation phase
 0.1.0 - Initial resolution phase
 0.0.1 - Initial commit to Github

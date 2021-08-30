@@ -23,6 +23,7 @@ enum NodeId {
 
 abstract class Node {
 protected:
+    bool _isResolved;
 public:
     Statement[] children;
     Node parent;
@@ -36,10 +37,14 @@ public:
     final Statement first() { return numChildren() > 0 ? children[0] : null; }
     final Statement last() { return numChildren() > 0 ? children[$-1] : null; }
 
+    final void setResolved() { this._isResolved = true; }
+
+    bool isResolved() { return _isResolved; }
+
     final Node add(Statement n) {
         n.detach();
         children ~= n;
-        n.parent = this.as!Statement;
+        n.parent = this.as!Node;
         return this.as!Statement;
     }
 
@@ -47,7 +52,7 @@ public:
         expect(i>=0 && i<=children.length);
         n.detach();
         children.insertAt(i, n);
-        n.parent = this.as!Statement;
+        n.parent = this.as!Node;
         return this.as!Statement;
     }
     /**
@@ -159,6 +164,9 @@ public:
         dump(buf);
         return buf;
     }
+
+    //abstract Function findFunction(string name);
+    //abstract Variable findVariable(string name);
 
     /**
      * Find all Variables or Functions with the specified _name_.
@@ -313,7 +321,21 @@ public:
             ch.each(call);
         }
     }
-
+protected:
+    Type resolveTypeFromParent() {
+        switch(parent.id()) with(NodeId) {
+            case VARIABLE:
+                auto var = parent.as!Variable;
+                if(var.type().isResolved()) {
+                    return var.type();
+                }
+                break;
+            default:
+                todo("implement %s.resolveTypeFromParent - parent is %s".format(this.id(), parent.id()));
+                break;
+        }
+        return UNKNOWN_TYPE;
+    }
 private:
     bool checkPublicAndConsume(ParseState state) {
         if(state.kind()==TokenKind.PLUS) {

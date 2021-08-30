@@ -14,7 +14,7 @@ public:
     }
 
     override Token getStartToken() {
-        return mod.startToken;
+        return MODULE_TOKEN;
     }
 
     void reset() {
