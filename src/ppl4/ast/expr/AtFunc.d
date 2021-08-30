@@ -37,7 +37,7 @@ public:
      * '@' name '(' { Expression } ')'
      *
      */
-    @Implements("Statement")
+    @Implements("Node")
     override AtFunc parse(ParseState state) {
         // name
         this.name = state.text(); state.next();
@@ -58,7 +58,7 @@ public:
         return this;
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
         if(!_type.isResolved()) {
             setResolved();
@@ -93,12 +93,12 @@ public:
         super.resolve(state);
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
 
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
 
     }

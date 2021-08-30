@@ -66,7 +66,7 @@ public:
      * name ":" Type "=" Expression
      * name "=" Expression
      */
-    @Implements("Statement")
+    @Implements("Node")
     override Variable parse(ParseState state) {
 
         // + (public)
@@ -101,7 +101,7 @@ public:
         return this;
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
         if(!type.isResolved()) {
 
@@ -123,14 +123,14 @@ public:
         }
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
         // 1) name must not be duplicate or shadow
         // 2) ...
         super.check();
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
 
         if(isGlobal()) {

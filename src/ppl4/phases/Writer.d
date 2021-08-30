@@ -25,7 +25,7 @@ public:
     void writeTokens(Module mod) {
         if(config.writeTokens) {
             auto path = config.output.directory.add(Directory("tk")).toString();
-            auto file = File(path ~ mod.name.toFileName().withExtension(".tk").value, "w");
+            auto file = File(path ~ mod.name.toFilename().withExtension(".tk").value, "w");
             file.rawWrite(mod.tokens.toString());
         }
     }
@@ -34,23 +34,23 @@ public:
             string buf;
             mod.dump(buf);
             auto path = config.output.directory.add(Directory("ast")).toString();
-            auto file = File(path ~ mod.name.toFileName().withExtension(".ast").value, "w");
+            auto file = File(path ~ mod.name.toFilename().withExtension(".ast").value, "w");
             file.rawWrite(buf);
         }
     }
     void writeLL(Module mod, Directory subdir) {
         if(config.writeIR) {
-            auto path = FileNameAndDirectory(
-                mod.name.toFileName().withExtension(".ll"),
-                mod.config.output.directory.add(subdir));
+            auto path = Filepath(
+                mod.config.output.directory.add(subdir),
+                mod.name.toFilename().withExtension(".ll"));
             mod.llvmValue.writeToFileLL(path.toString());
         }
     }
     bool writeASM(Module mod) {
         if(config.writeASM) {
-            auto path = FileNameAndDirectory(
-                mod.name.toFileName().withExtension(".asm"),
-                config.output.directory);
+            auto path = Filepath(
+                config.output.directory,
+                mod.name.toFilename().withExtension(".asm"));
             if(!llvm.x86Target.writeToFileASM(mod.llvmValue, path.toString())) {
                 warn("failed to write ASM %s", path);
                 return false;

@@ -23,7 +23,7 @@ public:
     /**
      * "null"
      */
-    @Implements("Statement")
+    @Implements("Node")
     override Null parse(ParseState state) {
         // name
         state.skip("null");
@@ -31,7 +31,7 @@ public:
         return this;
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
         if(!_isResolved) {
             this._type = resolveTypeFromParent();
@@ -44,12 +44,12 @@ public:
         }
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
 
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
         state.rhs = constNullPointer(_type.getLLVMType());
     }

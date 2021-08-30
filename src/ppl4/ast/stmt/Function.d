@@ -79,7 +79,7 @@ public:
     @Implements("Node")
     override NodeId id() { return NodeId.FUNCTION; }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void findTarget(string name, ref ITarget[] targets, Expression src) {
         if(this.name == name) {
             targets ~= this;
@@ -90,7 +90,7 @@ public:
     /**
      * name "=" "fn" "(" { Variable } ")" [ ":" Type ] "{" { Statement } "}"
      */
-    @Implements("Statement")
+    @Implements("Node")
     override Function parse(ParseState state) {
 
         // name
@@ -161,7 +161,7 @@ public:
         return this;
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
         if(!_isResolved) {
             resolveIsProgramEntry();
@@ -184,7 +184,7 @@ public:
         super.resolve(state);
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
         if(isProgramEntry && !returnType.exactlyMatches(INT)) {
             entryFuncReturnTypeShouldBeInt(this);
@@ -192,7 +192,7 @@ public:
         super.check();
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
         if(isExtern) return;
 

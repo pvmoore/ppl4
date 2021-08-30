@@ -36,7 +36,7 @@ public:
     /**
      * Type "(" Expression ")"
      */
-    @Implements("Statement")
+    @Implements("Node")
     override Cast parse(ParseState state) {
         // type
         _type = parseType(state);
@@ -53,7 +53,7 @@ public:
         return this;
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
         if(!isResolved) {
             if(_type.isResolved()) {
@@ -66,12 +66,12 @@ public:
         super.resolve(state);
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
 
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
 
         expr().generate(state);

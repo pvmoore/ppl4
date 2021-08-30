@@ -25,7 +25,7 @@ abstract class Node {
 protected:
 public:
     Statement[] children;
-    Statement parent;
+    Node parent;
     int uid;    // unique id per Module
 
     abstract NodeId id();
@@ -36,14 +36,14 @@ public:
     final Statement first() { return numChildren() > 0 ? children[0] : null; }
     final Statement last() { return numChildren() > 0 ? children[$-1] : null; }
 
-    final Statement add(Statement n) {
+    final Node add(Statement n) {
         n.detach();
         children ~= n;
         n.parent = this.as!Statement;
         return this.as!Statement;
     }
 
-    final Statement insertAt(int i, Statement n) {
+    final Node insertAt(int i, Statement n) {
         expect(i>=0 && i<=children.length);
         n.detach();
         children.insertAt(i, n);
@@ -53,7 +53,7 @@ public:
     /**
      *  Remove a child node at index. Default is the last child.
      */
-    final Statement remove(int index = -1) {
+    final Node remove(int index = -1) {
         expect(hasChildren());
         index = index==-1 ? children.length.as!int-1 : index;
         expect(index < children.length);
@@ -63,7 +63,6 @@ public:
 
         return ch;
     }
-
     /**
      *  Detach this Node from its parent
      */
@@ -124,7 +123,7 @@ public:
     /**
      *  @returns logically previous Node.
      */
-    Statement prev() {
+    final Node prev() {
         if(hasParent()) {
             auto i = parent.indexOf(this);
             if(i>0) {
@@ -138,7 +137,7 @@ public:
     /**
      *  @returns logically next Node.
      */
-    Statement next() {
+    final Node next() {
         if(hasParent()) {
             auto i = parent.indexOf(this);
             if(i < parent.numChildren()-1) {
@@ -147,6 +146,139 @@ public:
             return parent.next();
         }
         return null;
+    }
+
+    final void dump(ref string buf, string indent = "") {
+        buf ~= "%s%s\n".format(indent, this);
+        foreach(ch; children) {
+            ch.dump(buf, indent ~ "    ");
+        }
+    }
+    final string dumped() {
+        string buf;
+        dump(buf);
+        return buf;
+    }
+
+    /**
+     * Find all Variables or Functions with the specified _name_.
+     * Assume the start node is an Identifier or a Call.
+     */
+    void findTarget(string name, ref ITarget[] targets, Expression src) {
+        if(auto p = prev()) {
+            //trace("p= %s", p);
+            p.findTarget(name, targets, src);
+        }
+    }
+
+    /**
+     * Variable | Function | Enum | Import
+     * TypeDef | Struct | Class
+     */
+    Node parse(ParseState state) {
+        expect(this.isA!Module || this.isA!Struct || this.isA!Function);
+
+        bool publicAllowed      = this.isA!Module || this.isA!Struct;
+        bool structAllowed      = this.isA!Module;
+        bool enumAllowed        = this.isA!Module;
+        bool returnAllowed      = this.isA!Function;
+        bool expressionsAllowed = this.isA!Function;
+        bool functionAllowed    = true;
+        bool variableAllowed    = true;
+        bool importAllowed      = true;
+
+        // +
+        auto pub = checkPublicAndConsume(state);
+        if(pub && !publicAllowed) {
+            publicNotAllowed(state);
+        }
+
+        if("import" == state.text()) {
+            if(!importAllowed) syntaxError(state);
+            todo();
+        }
+        if("assert" == state.text()) {
+            add(state.make!Assert().parse(state));
+            return this;
+        }
+        if("return" == state.text()) {
+            if(!returnAllowed) statementNotAllowed(state, "return");
+            add(state.make!Return().parse(state));
+            return this;
+        }
+
+        auto kind1 = state.peek(1).kind;
+
+        if(kind1 == TokenKind.EQUALS) {
+            // name = struct
+            // name = class
+            // name = fn
+            // name = expression
+
+            auto text = state.peek(2).text;
+
+            if("extern" == text) {
+                if(!functionAllowed) syntaxError(state);
+
+                //add(new Function(mod, pub).parse(state));
+                add(state.make!Function(pub).parse(state));
+
+            } else if("struct" == text) {
+                if(!structAllowed) syntaxError(state);
+                // Add Struct to tree before parsing so that we
+                // can reference it while parsing the struct
+                auto s = state.make!Struct(pub);
+                add(s);
+                s.parse(state);
+
+            } else if("fn" == text) {
+                if(!functionAllowed) syntaxError(state);
+                add(state.make!Function(pub).parse(state));
+            } else {
+                // For now assume it is a Variable
+
+                if(!variableAllowed) syntaxError(state);
+                add(state.make!Variable(pub).parse(state));
+            }
+        } else if(kind1 == TokenKind.COLON) {
+            // name : type [ = expression ]
+
+            if(!variableAllowed) syntaxError(state);
+            add(state.make!Variable(pub).parse(state));
+        } else if(kind1 == TokenKind.COLON_EQUALS) {
+            // reassign
+            // name := Expression
+            if(!expressionsAllowed) syntaxError(state);
+            parseExpression(state, this);
+        } else if(kind1 == TokenKind.LBRACKET) {
+            // call
+            // cast
+            // name ( args )
+            if(!expressionsAllowed) syntaxError(state);
+            parseExpression(state, this);
+        } else {
+            todo("%s".format(state.peek()));
+        }
+        return this;
+    }
+
+    void resolve(ResolveState state) {
+        //trace("Resolve %s (%s children)", this.id(), numChildren());
+        foreach(stmt; children) {
+            stmt.resolve(state);
+        }
+    }
+
+    void check() {
+        foreach(stmt; children) {
+            stmt.check();
+        }
+    }
+
+    void generate(GenState state) {
+        foreach(stmt; children) {
+            stmt.generate(state);
+        }
     }
 
     T ancestor(T)() {
@@ -182,16 +314,12 @@ public:
         }
     }
 
-    void dump(ref string buf, string indent = "") {
-        buf ~= "%s%s\n".format(indent, this);
-        foreach(ch; children) {
-            ch.dump(buf, indent ~ "    ");
+private:
+    bool checkPublicAndConsume(ParseState state) {
+        if(state.kind()==TokenKind.PLUS) {
+            state.next();
+            return true;
         }
-    }
-
-    string dumped() {
-        string buf;
-        dump(buf);
-        return buf;
+        return false;
     }
 }

@@ -35,7 +35,7 @@ public:
     override int precedence() { return precedenceOf(op); }
 
 
-    @Implements("Statement")
+    @Implements("Node")
     override Binary parse(ParseState state) {
         this.op = toOperator(state); state.next();
         return this;
@@ -45,7 +45,7 @@ public:
      *  1) Resolve _type
      *  2) Cast left and right to _type
      */
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
 
         super.resolve(state);
@@ -65,12 +65,12 @@ public:
         }
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
 
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
 
         auto l = left();

@@ -18,7 +18,7 @@ public:
     @Implements("Node")
     override NodeId id() { return NodeId.IMPORT; }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void findTarget(string name, ref ITarget[] targets, Expression src) {
         todo("look in external Module");
     }
@@ -27,23 +27,23 @@ public:
      * "import" ModuleName [ "." Symbol ]
      * name = "import" ModuleName [ "." Symbol ]
      */
-    @Implements("Statement")
+    @Implements("Node")
     override Import parse(ParseState state) {
         todo();
         return this;
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
 
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
         // 1) ...
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
 
     }

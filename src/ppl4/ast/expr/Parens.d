@@ -28,7 +28,7 @@ public:
     /**
      * '(' Expression ')'
      */
-    @Implements("Statement")
+    @Implements("Node")
     override Parens parse(ParseState state) {
         // (
         state.skip(TokenKind.LBRACKET);
@@ -42,18 +42,18 @@ public:
         return this;
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
         setResolved();
         super.resolve(state);
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
 
     }
 
-    @Implements("Statement")
+    @Implements("StatNodeement")
     override void generate(GenState state) {
         first().generate(state);
     }

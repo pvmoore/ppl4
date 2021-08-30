@@ -8,14 +8,14 @@ private:
     Writer writer;
     Config config;
     Module mainModule;
-    FileName outName;
+    Filename outName;
 public:
     this(LLVMWrapper llvm, Writer writer, Config config, Module mainModule) {
         this.llvm = llvm;
         this.writer = writer;
         this.config = config;
         this.mainModule = mainModule;
-        this.outName = mainModule.name.toFileName();
+        this.outName = mainModule.name.toFilename();
     }
     bool link() {
         auto obj = getFilename(".obj");

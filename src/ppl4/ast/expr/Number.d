@@ -26,13 +26,13 @@ public:
     @Implements("Expression")
     override int precedence() { return precedenceOf(Operator.NUMBER); }
 
-    @Implements("Statement")
+    @Implements("Node")
     override Number parse(ParseState state) {
         this.valueStr = state.text(); state.next();
         return this;
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
         if(!isResolved) {
             auto t = parseNumberLiteral(valueStr);
@@ -47,12 +47,12 @@ public:
         }
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
 
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
         LLVMValueRef v;
         switch(_type.kind) with(TypeKind) {

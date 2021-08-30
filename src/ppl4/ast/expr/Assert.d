@@ -26,7 +26,7 @@ public:
     /**
      * "assert" Expression
      */
-    @Implements("Statement")
+    @Implements("Node")
     override Assert parse(ParseState state) {
         // "assert"
         state.skip("assert");
@@ -37,19 +37,19 @@ public:
         return this;
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
         setResolved();
 
         super.resolve(state);
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
 
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
 
     }

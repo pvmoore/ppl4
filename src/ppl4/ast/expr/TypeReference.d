@@ -22,25 +22,25 @@ public:
     @Implements("Expression")
     override int precedence() { return precedenceOf(Operator.TYPE_REFERENCE); }
 
-    @Implements("Statement")
+    @Implements("Node")
     override TypeReference parse(ParseState state) {
         todo();
         return this;
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
         if(!isResolved) {
 
         }
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
         // 1) ...
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
 
     }

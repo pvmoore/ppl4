@@ -14,7 +14,7 @@ public:
 
 //==================================================================================================
 
-void parseExpression(ParseState state, Statement parent) {
+void parseExpression(ParseState state, Node parent) {
     //trace("parseExpression\n%s", parent.dumped());
 
     auto expr = lhs(state, parent);
@@ -28,7 +28,7 @@ private:
 //==================================================================================================
 // L H S
 //==================================================================================================
-Expression lhs(ParseState state, Statement parent) {
+Expression lhs(ParseState state, Node parent) {
     Expression expr;
 
     switch(state.kind()) with(TokenKind) {
@@ -73,7 +73,7 @@ Expression lhs(ParseState state, Statement parent) {
 //==================================================================================================
 // R H S
 //==================================================================================================
-void rhs(ParseState state, Statement parent) {
+void rhs(ParseState state, Node parent) {
     while(true) {
         if(state.isNewLine()) return;
 
@@ -144,9 +144,9 @@ void rhs(ParseState state, Statement parent) {
 // 	prev.add(newexpr);
 // 	return newexpr;
 // }
-Expression attachAndRead2(ParseState state, Statement parent, Expression newExpr, bool andRead = true) {
+Expression attachAndRead2(ParseState state, Node parent, Expression newExpr, bool andRead = true) {
 
-    Statement prev = parent;
+    Node prev = parent;
 
     ///
     /// Swap expressions according to operator precedence

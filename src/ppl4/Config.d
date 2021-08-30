@@ -5,9 +5,9 @@ import std;
 
 final class Config {
 public:
-    FileName mainFilename;
+    Filename mainFilename;
     Directory directory;
-    FileNameAndDirectory output;
+    Filepath output;
     bool writeTokens = true;
     bool writeAST = true;
     bool writeIR = true;
@@ -23,15 +23,11 @@ public:
 
     this(string directory, string mainFilename) {
         this.directory = Directory(directory);
-        this.mainFilename = FileName(mainFilename);
-        this.output = FileNameAndDirectory(
-            this.mainFilename.withExtension("exe"),
-            this.directory);
+        this.mainFilename = Filename(mainFilename);
+        this.output = Filepath(this.directory, this.mainFilename.withExtension("exe"));
     }
     auto withOutput(string directory) {
-        this.output = FileNameAndDirectory(
-            this.mainFilename.withExtension("exe"),
-            Directory(directory));
+        this.output = Filepath(Directory(directory), this.mainFilename.withExtension("exe"));
         return this;
     }
     string[] getExternalLibs() {
@@ -60,8 +56,8 @@ public:
         //];
         return dynamicRuntime ~ libs;
     }
-    auto getFullPath(ModuleName name) {
-        return FileNameAndDirectory(name.toFileName(), directory);
+    Filepath getFullPath(ModuleName name) {
+        return Filepath(directory, name.toFilename());
     }
 
     override string toString() {

@@ -23,7 +23,7 @@ public:
     /**
      *  "return" [ Expression ]
      */
-    @Implements("Statement")
+    @Implements("Node")
     override Return parse(ParseState state) {
 
         // return
@@ -36,7 +36,7 @@ public:
         return this;
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
         if(isResolved) return;
         if(hasChildren()) {
@@ -50,13 +50,13 @@ public:
         }
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
         // Nothing to do
         super.check();
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
         auto func = ancestor!Function;
 

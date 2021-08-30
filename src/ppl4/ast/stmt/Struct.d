@@ -70,7 +70,7 @@ public:
     /**
      * name "=" "struct" "{" ( Function | Variable | Import ) "}"
      */
-    @Implements("Statement")
+    @Implements("Node")
     override Struct parse(ParseState state) {
 
         // name
@@ -81,7 +81,7 @@ public:
 
         // struct | class
         if("struct" == state.text()) {
-            
+
         } else if("class" == state.text()) {
             isClass = true;
         }
@@ -100,7 +100,7 @@ public:
         return this;
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
         super.resolve(state);
 
@@ -108,13 +108,13 @@ public:
         reorderVariables();
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
         // 1) ...
         super.check();
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
 
     }

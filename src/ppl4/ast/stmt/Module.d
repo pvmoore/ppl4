@@ -68,7 +68,7 @@ public:
     @Implements("Node")
     override NodeId id() { return NodeId.MODULE; }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void findTarget(string name, ref ITarget[] targets, Expression src) {
         foreach(t; collectChildren!ITarget) {
             auto v = t.as!Variable;
@@ -85,7 +85,7 @@ public:
     /**
      * Struct | Class | Enum | Function | Variable | Import
      */
-    @Implements("Statement")
+    @Implements("Node")
     override Module parse(ParseState state) {
 
         while(!state.isEOF()) {
@@ -100,15 +100,15 @@ public:
     /**
      *
      */
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
-       setResolved();
+        setResolved();
         super.resolve(state);
     }
     /**
      * @return true if ...
      */
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
         // Nothing to do
         super.check();
@@ -117,7 +117,7 @@ public:
     /**
      * @return true if the module was generated successfully
      */
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
         this.llvmValue = state.llvm.createModule(name.value);
 

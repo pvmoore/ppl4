@@ -36,7 +36,7 @@ public:
      * name '(' { Expression } ')'
      *
      */
-    @Implements("Statement")
+    @Implements("Node")
     override Call parse(ParseState state) {
         // name
         this.name = state.text(); state.next();
@@ -61,7 +61,7 @@ public:
      *  1) Resolve target
      *  2) Cast all args to target params
      */
-    @Implements("Statement")
+    @Implements("Node")
     override void resolve(ResolveState state) {
         if(!_isResolved) {
             resolveTarget();
@@ -76,12 +76,12 @@ public:
         super.resolve(state);
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void check() {
 
     }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void generate(GenState state) {
 
         auto var = target.as!Variable;
