@@ -25,10 +25,15 @@ abstract class Type {
     abstract bool exactlyMatches(Type other);
     abstract bool canImplicitlyCastTo(Type other);
 
+    // TODO - parse here
+    Type parse(ParseState state) {
+        return null;
+    }
+
     /**
      * @return a new resolved Type or this.
      */
-    Type resolve() {
+    Type resolve(ResolveState state) {
         if(!isResolved()) {
             todo("resolve type %s".format(this));
         }
@@ -94,13 +99,5 @@ abstract class Type {
                 break;
         }
         assert(false);
-    }
-
-    override string toString() {
-        string s;
-        foreach(i; 0..ptrDepth) {
-            s ~= "ref ";
-        }
-        return s;
     }
 }

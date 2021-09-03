@@ -1,3 +1,12 @@
 
+build:
+  type: debug
+
 target:
   directory: target
+  file: test
+  subsystem: console
+
+libs:
+  - one.lib
+  - two.lib

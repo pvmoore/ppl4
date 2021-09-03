@@ -183,6 +183,6 @@ public:
     }
 
     override string toString() {
-        return "Variable%s %s:%s".format(isPublic?"(+)":"", name, _type);
+        return "Variable%s %s:%s".format(isPublic?"(pub)":"", name, _type);
     }
 }

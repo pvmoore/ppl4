@@ -8,7 +8,7 @@ buildType "release" {
     dflags "-O5" platform="ldc"
     dflags "-mcpu=haswell" platform="ldc"
     dflags "-mattr=+fma,+avx2" platform="ldc"
-    dflags "-enable-cross-module-inlining" platform="ldc"
+    #dflags "-enable-cross-module-inlining" platform="ldc"
     dflags "-cache=.dub/cache" platform="ldc"
     dflags "-ffast-math" platform="ldc"
 

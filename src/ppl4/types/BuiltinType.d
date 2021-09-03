@@ -31,6 +31,6 @@ public:
     }
 
     override string toString() {
-        return super.toString() ~ kind.toString();
+        return kind.toString() ~ repeat("*", ptrDepth);
     }
 }

@@ -7,7 +7,7 @@
 
 // Initialise global variables here
 // Created if not already existing
-__init = fn {
+init = fn {
 
 }
 
@@ -23,28 +23,28 @@ g = 0
 
 // name = Type
 // public struct declaration and definition
-+ Animal = struct {
+pub Animal = struct {
     // public properties can be set in the constructor
     // eg. Animal(a:0, b:true)
 
-    + a : int = 1       // default if no value passed
-    + b : bool
+    pub a : int = 1       // default if no value passed
+    pub b : bool
     c   : float
     d   : double
-    e   : ref int
+    e   : int*
 
     //fp : fn(int):int // = (a) { return a+1 }
 
-    +sayHello = fn {}
+    pub sayHello = fn() {}
     sayGoodbye = fn {}
 
     // Implicit constructor if not manually added
-    __init = fn { // implied param: this:ref Animal
+    init = fn { // implied param: this:Animal*
         // set default or supplied property values
     }
 
     index = fn(i:int) : void {}
-    //equals = fn other:ref Animal {}
+    //equals = fn other:Animal* {}
 }
 
 //A = Animal()
@@ -52,15 +52,15 @@ g = 0
 // as int
 
 // public function declaration and definition
-+ main = fn {
+pub main = fn {
     a = byte(0)
     n = 0 + 1 + 2 * 3
     b = true
     n := 1
     c:int
     d:Animal
-    e:ref int
-    f:ref int = null
+    e:int*
+    f:int* = null
 
     //g = Animal()
 
@@ -72,7 +72,7 @@ g = 0
     return (1 + 2 * 3) / 4 - 5
 }
 
-add = fn a:int, b:int {
+add = fn(a:int, b:int) {
     return a + b
 }
 
@@ -80,7 +80,7 @@ test = fn {
     a = byte(1) + 2
 }
 
-test2 = fn a:Animal {
+test2 = fn(a:Animal) {
 
 }
 

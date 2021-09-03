@@ -13,11 +13,12 @@
             "problemMatcher": [],
             "group": "build"
         },
+
         {
             "label": "**** DEBUG projects/test ****",
             "type": "shell",
             "windows": {
-                "command": "chcp 65001 && dub run --build=debug --config=test --compiler=dmd --arch=x86_64 --parallel"
+                "command": "run_debug_build.bat test"
             },
             "group": {
                 "kind": "build",
@@ -33,7 +34,7 @@
             "label": "**** RELEASE projects/test ****",
             "type": "shell",
             "windows": {
-                "command": "chcp 65001 && dub run --build=release --config=test --compiler=ldc2 --arch=x86_64 --parallel"
+                "command": "run_release_build.bat test"
             },
             "presentation": {
                 "reveal": "always",
@@ -45,7 +46,7 @@
             "label": "**** Copy extensions ****",
             "type": "shell",
             "windows": {
-                "command": "xcopy /E /Y /Q . C:\\Users\\pvm_2\\.vscode\\extensions"
+                "command": "run_xcopy_extensions.bat"
             },
             "options": {
                 "cwd": "${workspaceFolder}/extensions/"

@@ -29,7 +29,6 @@ private:
 // L H S
 //==================================================================================================
 Expression lhs(ParseState state, Node parent) {
-    Expression expr;
 
     switch(state.kind()) with(TokenKind) {
         case IDENTIFIER:

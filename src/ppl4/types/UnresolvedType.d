@@ -23,6 +23,6 @@ public:
     }
 
     override string toString() {
-        return super.toString() ~ "UnresolvedType(%s)".format(name);
+        return "UnresolvedType(%s)".format(name) ~ repeat("*", ptrDepth);
     }
 }

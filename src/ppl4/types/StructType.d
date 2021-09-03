@@ -16,7 +16,7 @@ public:
         return struct_.isClass;
     }
 
-    Type parse(ParseState state) {
+    override Type parse(ParseState state) {
         todo();
         return this;
     }
@@ -40,6 +40,6 @@ public:
     }
 
     override string toString() {
-        return super.toString() ~ struct_.name;
+        return struct_.name ~ repeat("*", ptrDepth);
     }
 }

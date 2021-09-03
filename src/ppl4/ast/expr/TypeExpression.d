@@ -1,11 +1,11 @@
-module ppl4.ast.expr.TypeReference;
+module ppl4.ast.expr.TypeExpression;
 
 import ppl4.all;
 
 /**
- *  TypeReference
+ *  TypeExpression
  */
-final class TypeReference : Expression {
+final class TypeExpression : Expression {
 private:
     Type _type;
 public:
@@ -14,16 +14,16 @@ public:
     }
 
     @Implements("Node")
-    override NodeId id() { return NodeId.TYPE_REFERENCE; }
+    override NodeId id() { return NodeId.TYPE_EXPRESSION; }
 
     @Implements("Expression")
     override Type type() { return _type; }
 
     @Implements("Expression")
-    override int precedence() { return precedenceOf(Operator.TYPE_REFERENCE); }
+    override int precedence() { return precedenceOf(Operator.TYPE_EXPRESSION); }
 
     @Implements("Node")
-    override TypeReference parse(ParseState state) {
+    override TypeExpression parse(ParseState state) {
         todo();
         return this;
     }

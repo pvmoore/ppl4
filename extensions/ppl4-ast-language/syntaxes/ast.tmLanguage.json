@@ -58,7 +58,7 @@
 				},
 				{
 					"name" : "support.function.ast",
-					"match": "\\b(extern|static|returns|params)\\b"
+					"match": "\\b(pub|extern|static|returns|params)\\b"
 				},
 				{
 					"name" : "support.function.ast",

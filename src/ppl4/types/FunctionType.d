@@ -21,7 +21,7 @@ public:
         this.returnType = returnType;
     }
 
-    Type parse(ParseState state) {
+    override Type parse(ParseState state) {
         todo();
         return this;
     }
@@ -37,6 +37,6 @@ public:
     }
 
     override string toString() {
-        return "fn(%s):%s".format(typeString(params), returnType.toString());
+        return "fn(%s):%s%s".format(typeString(params), returnType.toString(), repeat("*", ptrDepth-1));
     }
 }

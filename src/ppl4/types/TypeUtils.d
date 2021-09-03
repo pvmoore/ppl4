@@ -147,18 +147,11 @@ bool isType(ParseState state) {
 }
 
 /**
- * { ref } (bool|byte|int|etc..|StructType|FunctionType|EnumType)
+ * { * } (bool|byte|int|etc..|StructType|FunctionType|EnumType)
  *
  */
 Type parseType(ParseState state) {
     Type t;
-    int numRefs;
-
-    // consume any "ref"s
-    while("ref" == state.text()) {
-        numRefs++;
-        state.next();
-    }
 
     switch(state.text()) {
         case "bool":
@@ -201,11 +194,11 @@ Type parseType(ParseState state) {
     }
     if(t) {
         state.next();
-        t.ptrDepth = numRefs;
 
-    } else if(numRefs > 0) {
-        // "ref" followed by non-type
-        todo();
+        while(TokenKind.ASTERISK == state.kind()) {
+            t.ptrDepth++;
+            state.next();
+        }
     }
 
     return t;

@@ -41,7 +41,7 @@ import ppl4.ast.expr.Identifier;
 import ppl4.ast.expr.Null;
 import ppl4.ast.expr.Number;
 import ppl4.ast.expr.Parens;
-import ppl4.ast.expr.TypeReference;
+import ppl4.ast.expr.TypeExpression;
 
 import ppl4.ast.stmt.Function;
 import ppl4.ast.stmt.Import;

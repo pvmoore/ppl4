@@ -17,7 +17,7 @@ enum NodeId {
     PARENS,
     RETURN,
     STRUCT,
-    TYPE_REFERENCE,
+    TYPE_EXPRESSION,
     VARIABLE
 }
 
@@ -338,7 +338,7 @@ protected:
     }
 private:
     bool checkPublicAndConsume(ParseState state) {
-        if(state.kind()==TokenKind.PLUS) {
+        if(state.text()=="pub") {
             state.next();
             return true;
         }

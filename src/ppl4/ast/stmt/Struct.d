@@ -14,7 +14,7 @@ private:
 public:
     string name;
     bool isPublic;
-    bool isClass;   // implicit ref
+    bool isClass;   // implicit ptr
     bool isPacked;
     LLVMTypeRef llvmType;
 
@@ -91,6 +91,8 @@ public:
         state.skip(TokenKind.LCURLY);
 
         while(!state.isKind(TokenKind.RCURLY)) {
+
+            // Call Node.parse
             super.parse(state);
         }
 
@@ -120,7 +122,7 @@ public:
     }
 
     override string toString() {
-        return "Struct%s '%s'".format(isPublic ? "(+)":"", name);
+        return "Struct%s '%s'".format(isPublic ? "(pub)":"", name);
     }
 private:
     /**

@@ -7,11 +7,12 @@ import ppl4.all;
  */
 enum Operator {
     NONE,
+
     DOT,            // .
     CALL,           // call()
-    //INDEX,          // get(), set() same as call()
+    //INDEX,        // get(), set() same as call()
 
-    CAST,           // type(expr)
+    CAST,           // as Type
 
     DIV,            // /
     MUL,            // *
@@ -31,7 +32,7 @@ enum Operator {
     BITOR,          // |
     BITXOR,         // ^
 
-    ASSIGN,         // =
+    ASSIGN,         // =        // do we need this here?
     REASSIGN,       // :=
     DIV_ASSIGN,     // /=
     MUL_ASSIGN,     // *=
@@ -45,8 +46,8 @@ enum Operator {
     BITOR_ASSIGN,   // |=
     BITXOR_ASSIGN,  // ^=
 
-    EQ,             // ==
-    NE,             // !=
+    EQ,             // ==   // operator overloadable
+    NE,             // !=   // operator overloadable
     IS,             // is
     LT,             // <
     LTE,            // <=
@@ -57,7 +58,7 @@ enum Operator {
 
     ASSERT,         // assert
     NUMBER,         //
-    TYPE_REFERENCE, //
+    TYPE_EXPRESSION,//
     IDENTIFIER,     //
     PARENS,         //
     NULL            // null
@@ -117,7 +118,7 @@ int precedenceOf(Operator o) {
 
         case ASSERT: return 50;
         case NUMBER: return 50;
-        case TYPE_REFERENCE: return 50;
+        case TYPE_EXPRESSION: return 50;
         case IDENTIFIER: return 50;
         case PARENS: return 50;
         case NULL: return 50;

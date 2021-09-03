@@ -104,39 +104,39 @@ public:
         if("extern" == state.text) {
             state.next();
             this.isExtern = true;
+            this.isPublic = true;
         }
 
         // "fn"
         state.skip("fn");
 
-        // parameters (optional brackets)
-
-        auto hasLBracket = false;
+        // (    (optional parameters)
         if(state.isKind(TokenKind.LBRACKET)) {
-            state.next();
-            hasLBracket = true;
-        }
 
-        while(state.kind()!=TokenKind.LCURLY &&
-              state.kind()!=TokenKind.COLON &&
-              state.kind()!=TokenKind.RBRACKET)
-        {
-            auto param = state.make!Variable(false).parse(state);
-            param.setAsParameter();
+            // (
+            state.skip(TokenKind.LBRACKET);
 
-            add(param);
+            // parameters
+            while(state.kind()!=TokenKind.LCURLY &&
+                state.kind()!=TokenKind.COLON &&
+                state.kind()!=TokenKind.RBRACKET)
+            {
+                auto param = state.make!Variable(false).parse(state);
+                param.setAsParameter();
 
-            numParams++;
+                add(param);
 
-            state.expectOneOf(TokenKind.LCURLY, TokenKind.COMMA, TokenKind.COLON, TokenKind.RBRACKET);
-            state.trySkip(TokenKind.COMMA);
-        }
+                numParams++;
 
-        if(hasLBracket) {
+                state.expectOneOf(TokenKind.LCURLY, TokenKind.COMMA, TokenKind.COLON, TokenKind.RBRACKET);
+                state.trySkip(TokenKind.COMMA);
+            }
+
+            // )
             state.skip(TokenKind.RBRACKET);
         }
 
-        // optional return Type
+        // :   (optional return Type)
         if(state.kind() == TokenKind.COLON) {
             state.next();
 
@@ -148,6 +148,8 @@ public:
             state.next();
 
             while(!state.isKind(RCURLY)) {
+
+                // Call Node.parse
                 super.parse(state);
             }
 
@@ -213,8 +215,11 @@ public:
                 numParams, returnType.isResolved() ? returnType.toString() : "?");
         }
 
-        string ex = isExtern ? " extern" : "";
-        return "Function%s '%s' %s%s".format(isPublic ? "(+)":"", name, t, ex);
+        string brk = isExtern && isPublic ? "(pub extern)"
+                                          : isExtern ? "(extern)"
+                                          : isPublic ? "(pub)"
+                                          : "";
+        return "Function%s '%s' %s".format(brk, name, t);
     }
 private:
     void resolveIsProgramEntry() {
