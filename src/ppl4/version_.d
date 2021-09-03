@@ -10,6 +10,12 @@ Currently working on:
 ----------------------------------------------------------------------------------------------------
     Changing syntax
     Making everything an Expression
+    Change Number to
+        - ILiteral/Number
+        - ILiteral/Null
+        - ILiteral/StructLiteral
+        - ILiteral/FunctionLiteral
+        - ILiteral/ArrayLiteral
 
     Struct member access
     Dot
@@ -38,25 +44,21 @@ Currently working on:
     ###########################
 
     - Use NodeFactory to abstract away Node creation
-    - use get() and set() instead of [] indexing
+    - use get(n) and set(n, T) instead of [n] indexing
     - Casting. Use "as" or @cast(type, expr) ?
     - Do we need assign/op eg. += since we won't support operator overloading for anything other
       than ==
     - No need for rol or ror
     - Errors need to give a module, line and column
 
-    class {
-        a:int
-        b:int
-
-        init = fn(a, b) {
-            // automatically sets this.a = a; this.b = b
+    class(
+        pub a:int
+        b:int=3)
+    {
+        default = fn {
+            this.a = 0
+            this.b = 3
         }
-        init = fn(a, b:int) {
-            // this.a = a
-            // b is local to this function
-        }
-
     }
 
 
