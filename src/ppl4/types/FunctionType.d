@@ -21,8 +21,51 @@ public:
         this.returnType = returnType;
     }
 
-    override Type parse(ParseState state) {
-        todo();
+    /**
+     *  "fn" "(" { PARAMS [ "->" RETURN_TYPE ]} ")"
+     *
+     *  PARAMS      ::= [ name ":" ] Type
+     *  RETURN_TYPE ::= Type
+     */
+    Type parse(ParseState state, Node parent) {
+        // fn
+        state.skip("fn");
+
+        // (
+        state.skip(TokenKind.LBRACKET);
+
+        // { PARAMS }
+
+        while(!state.isOneOf(TokenKind.RBRACKET, TokenKind.RT_ARROW)) {
+
+            bool isNameType = state.peek(1).kind == TokenKind.COLON;
+
+            if(isNameType) {
+                state.next(2);
+            }
+
+            if(state.text=="void" && state.peek(1).kind.isOneOf(TokenKind.RT_ARROW, TokenKind.RBRACKET)) {
+                state.next();
+            } else {
+                params ~= parseType(state, parent);
+            }
+
+            state.expectOneOf(TokenKind.COMMA, TokenKind.RBRACKET, TokenKind.RT_ARROW);
+            state.trySkip(TokenKind.COMMA);
+        }
+
+        // ->
+        if(state.isKind(TokenKind.RT_ARROW)) {
+            state.next();
+
+            if(!state.isKind(TokenKind.RBRACKET)) {
+                this.returnType = parseType(state, parent);
+            }
+        }
+
+        // )
+        state.skip(TokenKind.RBRACKET);
+
         return this;
     }
 
@@ -37,6 +80,7 @@ public:
     }
 
     override string toString() {
-        return "fn(%s):%s%s".format(typeString(params), returnType.toString(), repeat("*", ptrDepth-1));
+        auto p = params.length == 0 ? "void" : typeString(params);
+        return "fn(%s->%s)%s".format(p, returnType.toString(), repeat("*", ptrDepth-1));
     }
 }

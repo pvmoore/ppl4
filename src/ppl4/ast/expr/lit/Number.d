@@ -1,30 +1,27 @@
-module ppl4.ast.expr.Number;
+module ppl4.ast.expr.lit.Number;
 
 import ppl4.all;
 
 /**
  *  Number
  */
-final class Number : Expression {
+final class Number : Literal {
 private:
-    Type _type;
+
 public:
     string valueStr;
     Value value;
 
+    //==============================================================================================
     this(Module mod) {
         super(mod);
-        this._type = UNKNOWN_TYPE;
     }
 
-    @Implements("Node")
-    override NodeId id() { return NodeId.NUMBER; }
-
-    @Implements("Expression")
+    //=================================================================================== Expression
     override Type type() { return _type; }
 
-    @Implements("Expression")
-    override int precedence() { return precedenceOf(Operator.NUMBER); }
+    //========================================================================================= Node
+    override NodeId id() { return NodeId.NUMBER; }
 
     @Implements("Node")
     override Number parse(ParseState state) {
@@ -36,13 +33,14 @@ public:
     override void resolve(ResolveState state) {
         if(!isResolved) {
             auto t = parseNumberLiteral(valueStr);
-            if(t[0].isResolved()) {
-                this._type    = t[0];
-                this.valueStr = t[1];
+            if(t[0] != TypeKind.UNKNOWN) {
                 setResolved();
-                this.value = new Value(this);
+
+                this._type      = new BuiltinType(t[0]);
+                this.valueStr   = t[1];
+                this.value      = new Value(this);
             } else {
-                state.unresolved(this);
+                setUnresolved();
             }
         }
     }
@@ -64,51 +62,51 @@ public:
             case FLOAT:  v = constF32(value.getDouble()); break;
             case DOUBLE: v = constF64(value.getDouble()); break;
             default:
-                expect(false, "Invalid type %s".format(_type));
+                expect(false, "Invalid type %s".format(_type.kind));
                 break;
         }
         state.rhs = v;
     }
 
     override string toString() {
-        return "Number %s:%s".format(valueStr, _type);
+        return "Number %s:%s %s".format(valueStr, _type, isResolved() ? "✅" : "❌");
     }
 private:
-    From!"std.typecons".Tuple!(Type,string) parseNumberLiteral(string v) {
+    From!"std.typecons".Tuple!(TypeKind,string) parseNumberLiteral(string v) {
 
-        auto t = tuple(UNKNOWN_TYPE, v);
+        auto t = tuple(TypeKind.UNKNOWN, v);
         assert(v.length>0);
 
         bool neg = (v[0]=='-');
         if(neg) v = v[1..$];
 
         if(v.length==1) {
-            if(isDigit(v[0])) t[0] = new BuiltinType(TypeKind.INT);
+            if(isDigit(v[0])) t[0] = TypeKind.INT;
         } else if(v=="true") {
-            t[0] = BOOL;
+            t[0] = TypeKind.BOOL;
             t[1] = "%s".format(TRUE);
         } else if(v=="false") {
-            t[0] = BOOL;
+            t[0] = TypeKind.BOOL;
             t[1] = "%s".format(FALSE);
         } else if(v[0]=='\'') {
             long l = parseCharLiteral(v[1..$-1]);
-            t[0] = INT;
+            t[0] = TypeKind.INT;
             t[1] = "%s".format(l);
         } else if(v.endsWith("L")) {
-            t[0] = new BuiltinType(TypeKind.LONG);
+            t[0] = TypeKind.LONG;
             t[1] = v[0..$-1];
         } else if(v[0..2]=="0x") {
             v = v[2..$];
             if(v.length>0 && isHexDigits(v)) {
                 long l = hexToLong(v);
-                t[0] = new BuiltinType(getTypeOfLong(l));
+                t[0] = getTypeOfLong(l);
                 t[1] = "%s".format(l);
             }
         } else if(v[0..2]=="0b") {
             v = v[2..$];
             if (v.length>0 && isBinaryDigits(v)) {
                 long l = binaryToLong(v);
-                t[0] = new BuiltinType(getTypeOfLong(l));
+                t[0] = getTypeOfLong(l);
                 t[1] = "%s".format(l);
             }
         // } else if(v.endsWith("h")) {
@@ -122,16 +120,16 @@ private:
         } else if(v.endsWith("d")) {
             string s = v[0..$-1];
             if(s.count('.')<2 && isDigits(s.removeChars('.'))) {
-                t[0] = new BuiltinType(TypeKind.DOUBLE);
+                t[0] = TypeKind.DOUBLE;
                 t[1] = s;
             }
         } else if(v.count('.')==1) {        /// assume float if no type specified
             if(isDigits(v.removeChars('.'))) {
-                t[0] = new BuiltinType(TypeKind.FLOAT);
+                t[0] = TypeKind.FLOAT;
             }
         } else if(isDigits(v)) {
             long l = From!"std.conv".to!long(t[1]);
-            t[0] = new BuiltinType(getTypeOfLong(l));
+            t[0] = getTypeOfLong(l);
         } else {
             // not a number literal
         }

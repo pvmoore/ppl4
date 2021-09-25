@@ -7,35 +7,25 @@ private:
     Type _type;
     Operator op;
 public:
+    Expression left() { return first().as!Expression; }
+    Expression right() { return last().as!Expression; }
+    Type leftType() { return left().type(); }
+    Type rightType() { return right().type(); }
+
+    //==============================================================================================
     this(Module mod) {
         super(mod);
         this._type = UNKNOWN_TYPE;
     }
 
-    Expression left() {
-        return first().as!Expression;
-    }
-    Expression right() {
-        return last().as!Expression;
-    }
-    Type leftType() {
-        return left().type();
-    }
-    Type rightType() {
-        return right().type();
-    }
-
-    @Implements("Node")
-    override NodeId id() { return NodeId.BINARY; }
-
-    @Implements("Expression")
+    //=================================================================================== Expression
     override Type type() { return _type; }
 
-    @Implements("Expression")
     override int precedence() { return precedenceOf(op); }
 
+    //========================================================================================= Node
+    override NodeId id() { return NodeId.BINARY; }
 
-    @Implements("Node")
     override Binary parse(ParseState state) {
         this.op = toOperator(state); state.next();
         return this;
@@ -45,7 +35,6 @@ public:
      *  1) Resolve _type
      *  2) Cast left and right to _type
      */
-    @Implements("Node")
     override void resolve(ResolveState state) {
 
         super.resolve(state);
@@ -57,20 +46,18 @@ public:
                 }
             }
 
-            if(type.isResolved() && castArgs()) {
+            if(_type.isResolved() && castArgs()) {
                 setResolved();
             } else {
-                state.unresolved(this);
+                setUnresolved();
             }
         }
     }
 
-    @Implements("Node")
     override void check() {
-
+        super.check();
     }
 
-    @Implements("Node")
     override void generate(GenState state) {
 
         auto l = left();
@@ -116,15 +103,15 @@ public:
             //right = state.castType(right, rtype, _type);
 
             if (op==Operator.ADD || op is Operator.ADD_ASSIGN) {
-                right = add(state, type, left, right);
+                right = add(state, _type, left, right);
             } else if (op is Operator.SUB || op is Operator.SUB_ASSIGN) {
-                right = sub(state, type, left, right);
+                right = sub(state, _type, left, right);
             } else if (op is Operator.MUL || op is Operator.MUL_ASSIGN) {
-                right = mul(state, type, left, right);
+                right = mul(state, _type, left, right);
             } else if (op is Operator.DIV || op is Operator.DIV_ASSIGN) {
-                right = div(state, type, left, right);
+                right = div(state, _type, left, right);
             } else if (op is Operator.MOD || op is Operator.MOD_ASSIGN) {
-                right = modulus(state, type, left, right);
+                right = modulus(state, _type, left, right);
             } else if (op is Operator.SHL || op is Operator.SHL_ASSIGN) {
                 right = shl(state, left, right);
             } else if (op is Operator.SHR || op is Operator.SHR_ASSIGN) {
@@ -145,6 +132,7 @@ public:
         }
     }
 
+    //======================================================================================= Object
     override string toString() {
         return "Binary %s:%s".format(op, _type);
     }

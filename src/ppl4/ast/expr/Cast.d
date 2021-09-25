@@ -4,12 +4,15 @@ import ppl4.all;
 
 /**
  *  Cast (type)
+ *      Expression
  */
 final class Cast : Expression {
 private:
     Type _type;
 public:
+    Expression expr() { return first().as!Expression; }
 
+    //==============================================================================================
     this(Module mod) {
         super(mod);
     }
@@ -20,26 +23,21 @@ public:
         return c;
     }
 
-    Expression expr() {
-        return first().as!Expression;
-    }
-
-    @Implements("Node")
-    override NodeId id() { return NodeId.CAST; }
-
-    @Implements("Expression")
+    //=================================================================================== Expression
     override Type type() { return _type; }
 
-    @Implements("Expression")
     override int precedence() { return precedenceOf(Operator.CAST); }
+
+    //========================================================================================= Node
+
+    override NodeId id() { return NodeId.CAST; }
 
     /**
      * Type "(" Expression ")"
      */
-    @Implements("Node")
     override Cast parse(ParseState state) {
         // type
-        _type = parseType(state);
+        _type = parseType(state, this);
 
         // (
         state.skip(TokenKind.LBRACKET);
@@ -53,7 +51,6 @@ public:
         return this;
     }
 
-    @Implements("Node")
     override void resolve(ResolveState state) {
         if(!isResolved) {
             if(_type.isResolved()) {
@@ -66,12 +63,10 @@ public:
         super.resolve(state);
     }
 
-    @Implements("Node")
     override void check() {
-
+        super.check();
     }
 
-    @Implements("Node")
     override void generate(GenState state) {
 
         expr().generate(state);
@@ -79,7 +74,8 @@ public:
         state.rhs = state.castType(state.rhs, expr().type(), _type, "cast");
     }
 
+    //======================================================================================= Object
     override string toString() {
-        return "Cast (%s)".format(_type);
+        return "As (%s)".format(_type);
     }
 }

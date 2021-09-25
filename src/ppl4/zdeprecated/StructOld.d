@@ -1,4 +1,4 @@
-module ppl4.ast.stmt.Struct;
+module ppl4.zdeprecated.StructOld;
 
 import ppl4.all;
 
@@ -8,27 +8,28 @@ import ppl4.all;
  *      { [ Function ] }
  *      { [ Import ] }
  */
-final class Struct : Statement {
+ /+
+final class StructOld : Statement {
 private:
     StructType _type;
 public:
     string name;
     bool isPublic;
-    bool isClass;   // implicit ptr
+    bool isClass;       // implicit ptr
     bool isPacked;
     LLVMTypeRef llvmType;
 
     this(Module mod, bool isPublic) {
         super(mod);
         this.isPublic = isPublic;
-        this._type = new StructType(this);
+        //this._type = new StructType(this);
     }
 
-    Variable[] getVariables() {
-        return collectChildren!Variable;
+    VariableOld[] getVariables() {
+        return collectChildren!VariableOld;
     }
-    Function[] getFunctions() {
-        return collectChildren!Function;
+    FnDecl[] getFunctions() {
+        return collectChildren!FnDecl;
     }
     Type[] getVariableTypes() {
         return getVariables()
@@ -52,11 +53,12 @@ public:
     override void findTarget(string name, ref ITarget[] targets, Expression src) {
         // Only look at Struct variables and functions
         // if the src Identifier is within this Struct
-        auto s = src.ancestor!Struct;
+        auto s = src.ancestor!StructLiteral;
         if(s && s is this) {
             foreach(t; collectChildren!ITarget) {
-                auto v = t.as!Variable;
-                auto f = t.as!Function;
+                auto v = t.as!VariableOld;
+                auto f = t.as!FnDecl;
+
                 if(v && v.name == name) {
                     targets ~= v;
                 } else if(f && f.name == name) {
@@ -71,7 +73,7 @@ public:
      * name "=" "struct" "{" ( Function | Variable | Import ) "}"
      */
     @Implements("Node")
-    override Struct parse(ParseState state) {
+    override StructOld parse(ParseState state) {
 
         // name
         this.name = state.text(); state.next();
@@ -79,10 +81,8 @@ public:
         // =
         state.skip(TokenKind.EQUALS);
 
-        // struct | class
-        if("struct" == state.text()) {
-
-        } else if("class" == state.text()) {
+        // struct | class | component
+        if("class" == state.text()) {
             isClass = true;
         }
         state.next();
@@ -138,3 +138,4 @@ private:
         }
     }
 }
++/

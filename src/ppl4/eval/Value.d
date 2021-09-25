@@ -15,18 +15,19 @@ public:
         this.number = number;
         expect(number.isResolved);
 
-        if(type().isBool()) {
+        if(kind() == TypeKind.BOOL) {
             i = number.valueStr.to!long == 0 ? FALSE : TRUE;
-        } else if(type().isInteger()) {
+        } else if(kind().isInteger()) {
             i = number.valueStr.to!long;
-        } else if(type().isReal()) {
+        } else if(kind().isReal()) {
             f = number.valueStr.to!double;
         } else assert(false, "How did we get here? type is %s".format(type()));
 
     }
     Type type() { return number.type(); }
+    TypeKind kind() { return type().kind; }
     bool getBool() { return getLong() != FALSE; }
     int getInt() { return cast(int)getLong(); }
-    long getLong() { if(type.isReal()) return cast(long)f; return i; }
-    double getDouble() { if(!type.isReal()) return cast(double)i; return f; }
+    long getLong() { if(kind().isReal()) return cast(long)f; return i; }
+    double getDouble() { if(!kind().isReal()) return cast(double)i; return f; }
 }

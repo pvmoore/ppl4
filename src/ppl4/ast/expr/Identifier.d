@@ -10,27 +10,26 @@ private:
 
 public:
     string name;
-    ITarget target;
+    Declaration target;
 
+    //==============================================================================================
     this(Module mod) {
         super(mod);
     }
 
-    @Implements("Node")
-    override NodeId id() { return NodeId.IDENTIFIER; }
-
-    @Implements("Expression")
+    //=================================================================================== Expression
     override Type type() {
-        return target && target.isResolved() ? target.type() : UNKNOWN_TYPE;
+        return target && target.isResolved ? target.type : UNKNOWN_TYPE;
     }
 
-    @Implements("Expression")
     override int precedence() { return precedenceOf(Operator.IDENTIFIER); }
+
+    //========================================================================================= Node
+    override NodeId id() { return NodeId.IDENTIFIER; }
 
     /**
      * name
      */
-    @Implements("Node")
     override Identifier parse(ParseState state) {
         // name
         this.name = state.text(); state.next();
@@ -38,61 +37,59 @@ public:
         return this;
     }
 
-    @Implements("Node")
     override void resolve(ResolveState state) {
-        if(!_isResolved) {
+        if(!isResolved) {
             resolveTarget();
 
             if(target) {
                 setResolved();
             } else {
-                state.unresolved(this);
+                setUnresolved();
             }
         }
     }
 
-    @Implements("Node")
     override void check() {
 
     }
 
-    @Implements("Node")
     override void generate(GenState state) {
         if(target.isMember()) {
             todo();
 
-        } else if(target.isA!Function) {
+        } else if(target.isA!FnDecl) {
             // function
-            state.rhs = target.as!Function.llvmValue;
+            state.rhs = target.as!FnDecl.getLlvmValue();
             expect(state.rhs !is null);
 
         } else {
             // variable
-            state.lhs = target.as!Variable.llvmValue;
+            state.lhs = target.as!VarDecl.getLlvmValue();
             expect(state.lhs !is null);
             state.rhs = state.builder.load(state.lhs);
         }
     }
 
+    //======================================================================================= Object
     override string toString() {
-        return "Identifier %s:%s".format(name, target ? target.type() : UNKNOWN_TYPE);
+        return "Identifier %s:%s".format(name, target ? target.type : UNKNOWN_TYPE);
     }
 private:
     void resolveTarget() {
         // trace("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         // trace("Looking for '%s'", name);
         // trace("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        ITarget[] targets;
-        findTarget(name, targets, this);
+        bool[Declaration] targets;
+        findDeclaration(name, targets, this);
         // trace("targets: %s", targets);
         // trace("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
         if(targets.length == 0) {
             // TODO - not found
         } else if(targets.length == 1) {
-            this.target = targets[0];
+            this.target = targets.keys()[0];
         } else {
-            // TODO - several matches found
+            errorShadowingDeclaration(this, targets.keys());
         }
     }
 }

@@ -1,4 +1,4 @@
-module ppl4.phases.GenState;
+module ppl4.GenState;
 
 import ppl4.all;
 
@@ -32,7 +32,7 @@ public:
             mod.llvmValue.dump();
             warn("=======================================");
             warn("module %s is invalid", mod.name);
-            throw new VerifyError();
+            throw new Exception("Verify error");
         }
     }
     void writeLL(Directory subdir) {
@@ -42,7 +42,7 @@ public:
         passManager.runOnModule(mod.llvmValue);
     }
     LLVMBasicBlockRef createBlock(Statement n, string name) {
-        auto func = n.ancestor!Function();
+        auto func = n.ancestor!FnLiteral();
         assert(func);
         return func.llvmValue.appendBasicBlock(name);
     }

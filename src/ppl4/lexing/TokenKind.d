@@ -23,6 +23,8 @@ enum TokenKind {
     LARROW_EQ,      // <=
     RARROW_EQ,      // >=
 
+    RT_ARROW,       // ->
+
     PLUS,           // +
     MINUS,          // -
     ASTERISK,       // *
@@ -74,6 +76,8 @@ string toString(TokenKind k) {
         case RARROW: return ">";
         case LARROW_EQ: return "<=";
         case RARROW_EQ: return ">=";
+
+        case RT_ARROW: return "->";
 
         case PLUS: return "+";
         case MINUS: return "-";

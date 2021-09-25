@@ -2,6 +2,14 @@ module ppl4.utils;
 
 import ppl4.all;
 
+void pplAssert(bool expect, string msg = null) {
+    if(!expect) {
+        auto errMsg = "Compiler error. Failed assertion";
+        if(msg) errMsg = "%s: %s".format(errMsg, msg);
+        throw new Exception(errMsg);
+    }
+}
+
 ulong time(void delegate() d) {
     StopWatch w;
     w.start();

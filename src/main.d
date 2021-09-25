@@ -24,7 +24,7 @@ int main(string[] args) {
         auto errors = c.getErrors();
 
         foreach(e; errors) {
-            writefln("➝ %s", e);
+            writefln("%s", e);
         }
 
     } else {

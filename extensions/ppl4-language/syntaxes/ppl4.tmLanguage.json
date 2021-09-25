@@ -46,15 +46,15 @@
 				},
 				{
 					"name": "storage.type.ppl4",
-					"match": "\\b(ref|bool|byte|short|int|long|float|half|double|void|struct|class|enum|fn|alias)(\\*+|\\b)"
+					"match": "\\b(ref|bool|byte|short|int|long|float|half|double|void|struct|class|enum|fn|typedef)(\\*+|\\b)"
 				},
 				{
 					"name": "storage.modifier.public.ppl4",
-					"match": "\\b(pub)(\\*+|\\b)"
+					"match": "\\b(pub|extern)(\\*+|\\b)"
 				},
 				{
 					"name" : "storage.modifier.ppl4",
-					"match": "\\b(extern|static)\\b"
+					"match": "\\b(static)\\b"
 				},
 				{
 					"name" : "support.function.ppl4",
@@ -74,7 +74,7 @@
 				},
 				{
 					"name": "entity.other.this.ppl4",
-					"match": "\\b(this)(\\**|\\b)"
+					"match": "\\b(this|default)(\\**|\\b)"
 				}
 			]
 		},

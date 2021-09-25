@@ -10,23 +10,23 @@ final class Assert : Expression {
 private:
 
 public:
+
+    //==============================================================================================
     this(Module mod) {
         super(mod);
     }
 
-    @Implements("Node")
-    override NodeId id() { return NodeId.ASSERT; }
-
-    @Implements("Expression")
+    //=================================================================================== Expression
     override Type type() { return BOOL; }
 
-    @Implements("Expression")
     override int precedence() { return precedenceOf(Operator.ASSERT); }
+
+    //========================================================================================= Node
+    override NodeId id() { return NodeId.ASSERT; }
 
     /**
      * "assert" Expression
      */
-    @Implements("Node")
     override Assert parse(ParseState state) {
         // "assert"
         state.skip("assert");
@@ -37,23 +37,21 @@ public:
         return this;
     }
 
-    @Implements("Node")
     override void resolve(ResolveState state) {
         setResolved();
 
         super.resolve(state);
     }
 
-    @Implements("Node")
     override void check() {
 
     }
 
-    @Implements("Node")
     override void generate(GenState state) {
 
     }
 
+    //======================================================================================= Object
     override string toString() {
         return "Assert";
     }

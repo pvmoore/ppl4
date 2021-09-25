@@ -1,4 +1,4 @@
-module ppl4.ast.stmt.Function;
+module ppl4.zdeprecated.FunctionOld;
 
 import ppl4.all;
 
@@ -7,7 +7,8 @@ import ppl4.all;
  *      { Variable }        // numParams parameters
  *      { Statement }       // body
  */
-final class Function : Statement, ITarget {
+ /+
+final class FunctionOld : Statement, ITarget {
 private:
     Type _type;         // Will be a FunctionType when resolved
     Type _returnType;   // This can be known before _type is known
@@ -19,19 +20,21 @@ public:
     bool isProgramEntry;
     LLVMValueRef llvmValue;
 
-    this(Module mod, bool isPublic) {
-        super(mod);
-        this.isPublic = isPublic;
-        this._type = UNKNOWN_TYPE;
-        this._returnType = UNKNOWN_TYPE;
-    }
+    VariableOld[] params() { return children[0..numParams].map!(it=>cast(VariableOld)it).array; }
+    Type[] paramTypes() { return params().map!(it=>it.type).array; }
+    Type returnType() { return _returnType; }
 
-    static auto make(Module mod, string name, FunctionType type) {
-        auto f = new Function(mod, false);
-        f.name = name;
-        f._type = type;
-        return f;
-    }
+    @Implements("ITarget")
+    override bool isMember() { return parent.isA!StructLiteral; }
+
+    @Implements("ITarget")
+    Type type() { return _type; }
+
+    @Implements("ITarget")
+    override bool isResolved() { return super.isResolved(); }
+
+    @Implements("ITarget")
+    override LLVMValueRef getLlvmValue() { return llvmValue; }
 
     string uniqueName() {
         expect(isResolved);
@@ -44,36 +47,24 @@ public:
         return LLVMCallConv.LLVMFastCallConv;
     }
 
-    Variable[] params() {
-        return children[0..numParams].map!(it=>cast(Variable)it).array;
+    //----------------------------------------------------------------------------------------------
+    this(Module mod, bool isPublic) {
+        super(mod);
+        this.isPublic = isPublic;
+        this._type = UNKNOWN_TYPE;
+        this._returnType = UNKNOWN_TYPE;
     }
-    Type[] paramTypes() {
-        return params().map!(it=>it.type).array;
-    }
-    Type returnType() {
-        return _returnType;
-    }
+
+    // static auto make(Module mod, string name, FunctionType type) {
+    //     auto f = new FunctionOld(mod, false);
+    //     f.name = name;
+    //     f._type = type;
+    //     return f;
+    // }
+    //----------------------------------------------------------------------------------------------
 
     void generateDeclaration() {
         doGenerateDecl();
-    }
-
-    @Implements("ITarget")
-    override bool isMember() {
-        return parent.isA!Struct;
-    }
-
-    @Implements("ITarget")
-    Type type() {
-        return _type;
-    }
-    @Implements("ITarget")
-    override bool isResolved() {
-        return super.isResolved();
-    }
-    @Implements("ITarget")
-    override LLVMValueRef getLlvmValue() {
-        return llvmValue;
     }
 
     @Implements("Node")
@@ -91,7 +82,7 @@ public:
      * name "=" "fn" "(" { Variable } ")" [ ":" Type ] "{" { Statement } "}"
      */
     @Implements("Node")
-    override Function parse(ParseState state) {
+    override FunctionOld parse(ParseState state) {
 
         // name
         this.name = state.text(); state.next();
@@ -121,7 +112,7 @@ public:
                 state.kind()!=TokenKind.COLON &&
                 state.kind()!=TokenKind.RBRACKET)
             {
-                auto param = state.make!Variable(false).parse(state);
+                auto param = mod.nodeFactory.make!VariableOld(false, state.peek()).parse(state);
                 param.setAsParameter();
 
                 add(param);
@@ -140,7 +131,7 @@ public:
         if(state.kind() == TokenKind.COLON) {
             state.next();
 
-            this._returnType = parseType(state);
+            this._returnType = parseType(state, this);
         }
 
         // {
@@ -176,7 +167,7 @@ public:
                 // Add an implicit ret void at the end
                 if(returnType.kind == TypeKind.VOID && !returnType.isPtr()) {
                     if(!hasChildren() || !last().isA!Return) {
-                        add(state.make!Return());
+                        add(mod.nodeFactory.make!Return(MODULE_TOKEN));
                     }
                 }
             } else {
@@ -307,3 +298,4 @@ private:
         }
     }
 }
++/

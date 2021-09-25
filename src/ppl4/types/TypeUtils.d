@@ -4,6 +4,7 @@ import ppl4.all;
 
 __gshared {
     Type UNKNOWN_TYPE = new BuiltinType(TypeKind.UNKNOWN);
+
     Type BOOL = new BuiltinType(TypeKind.BOOL);
     Type BYTE = new BuiltinType(TypeKind.BYTE);
     Type SHORT = new BuiltinType(TypeKind.SHORT);
@@ -13,8 +14,8 @@ __gshared {
     Type DOUBLE = new BuiltinType(TypeKind.DOUBLE);
     Type VOID = new BuiltinType(TypeKind.VOID);
 
-    Type REF_BYTE = new BuiltinType(TypeKind.BYTE, 1);
-    Type REF_VOID = new BuiltinType(TypeKind.VOID, 1);
+    Type BYTE_PTR = new BuiltinType(TypeKind.BYTE, 1);
+    Type VOID_PTR = new BuiltinType(TypeKind.VOID, 1);
 }
 
 bool areResolved(Type[] types) {
@@ -63,6 +64,18 @@ Type getBestFit(Type a, Type b) {
 
     if(a.exactlyMatches(b)) return a;
 
+    if(a.isClass() || b.isClass()) {
+        // todo - some clever logic here
+        return UNKNOWN_TYPE;
+    }
+    if(a.isComponent() || b.isComponent()) {
+        // todo - some clever logic here
+        return UNKNOWN_TYPE;
+    }
+    if(a.isFunction() || b.isFunction()) {
+        return UNKNOWN_TYPE;
+    }
+
     if(a.isPtr() || b.isPtr()) {
         return UNKNOWN_TYPE;
     }
@@ -74,9 +87,7 @@ Type getBestFit(Type a, Type b) {
         // todo - some clever logic here
         return UNKNOWN_TYPE;
     }
-    if(a.isFunction() || b.isFunction()) {
-        return UNKNOWN_TYPE;
-    }
+
     // if(a.isArray || b.isArray) {
     //     return UNKNOWN_TYPE;
     // }
@@ -134,12 +145,7 @@ bool isBuiltinType(ParseState state) {
 bool isType(ParseState state) {
     if(isBuiltinType(state)) return true;
 
-    string s;
-    for(int i = 0; true; i++) {
-        s = state.peek(i).text;
-        if("ref" != s) break;
-        i++;
-    }
+    string s = state.text();
 
     if(state.mod.declaresType(s, true)) return true;
 
@@ -150,51 +156,61 @@ bool isType(ParseState state) {
  * { * } (bool|byte|int|etc..|StructType|FunctionType|EnumType)
  *
  */
-Type parseType(ParseState state) {
+Type parseType(ParseState state, Node parent) {
     Type t;
 
     switch(state.text()) {
         case "bool":
             t = new BuiltinType(TypeKind.BOOL);
+            state.next();
             break;
         case "byte":
             t = new BuiltinType(TypeKind.BYTE);
+            state.next();
             break;
         case "short":
             t = new BuiltinType(TypeKind.SHORT);
+            state.next();
             break;
         case "int":
             t = new BuiltinType(TypeKind.INT);
+            state.next();
             break;
         case "long":
             t = new BuiltinType(TypeKind.LONG);
+            state.next();
             break;
         case "float":
             t = new BuiltinType(TypeKind.FLOAT);
+            state.next();
             break;
         case "double":
             t = new BuiltinType(TypeKind.DOUBLE);
+            state.next();
             break;
         case "void":
             t = new BuiltinType(TypeKind.VOID);
+            state.next();
             break;
         case "fn":
-            t = new FunctionType().parse(state);
+            t = new FunctionType().parse(state, parent);
+            break;
+        case "struct":
+            todo("unnamed struct");
+            break;
+        case "array":
+            todo("array");
             break;
         default:
-            trace("struct");
-            // struct, class, enum
-            auto s = state.mod.getStruct(state.text());
-            if(s) {
-                t = new StructType(s);
-            } else {
+            // struct, class, enum, typedef
+            t = resolveType(state.text(), parent);
+
+            if(!t) {
                 t = new UnresolvedType(state.text());
             }
             break;
     }
     if(t) {
-        state.next();
-
         while(TokenKind.ASTERISK == state.kind()) {
             t.ptrDepth++;
             state.next();
@@ -204,6 +220,40 @@ Type parseType(ParseState state) {
     return t;
 }
 
-void resolveType(ref Type type) {
+bool declarationExists(string name, Node node) {
+    bool[Declaration] decls;
+    node.findDeclaration(name, decls, node);
+    return decls.length > 0;
+}
 
+Type resolveType(string name, Node node) {
+    bool[Declaration] decls;
+    node.findDeclaration(name, decls, node);
+    if(decls.length==1) {
+        auto d = decls.keys()[0];
+        if(d.isResolved()) {
+            if(d.isA!StructDecl) {
+                return new StructType(d.as!StructDecl.getStructLiteral());
+            }
+        }
+        return null;
+    } else if(decls.length>1) {
+        // this is an error
+        return null;
+    }
+    // error - not found
+    return null;
+}
+
+Type resolveType(Node node, Type type) {
+    if(type.isResolved()) return type;
+
+    auto mod = node.mod;
+    auto ut = type.as!UnresolvedType;
+
+    if(ut) {
+        auto t = resolveType(ut.name, node);
+        if(t) return t;
+    }
+    return type;
 }

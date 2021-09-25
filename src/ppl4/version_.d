@@ -2,7 +2,7 @@ module ppl4.version_;
 
 import ppl4.all;
 
-const VERSION = "0.1.5";
+const VERSION = "0.2.0";
 
 /**
 
@@ -20,10 +20,14 @@ Currently working on:
     Struct member access
     Dot
     Constructor
-    Changing CastExpression to AsExpression
+    Changing Cast to As
 
 ----------------------------------------------------------------------------------------------------
-0.1.5 -
+0.2.0 - Move Node generation to NodeFactory
+      - Remove ITarget. Replace with Declaration
+      - Refactor Variable, Function, Struct. Split into Declarations and Literals
+      - Refactor resolution
+      - Change function types to fn(params->returnType)
 
 0.1.4 - Require brackets around function parameters unless there are no parameters
       - Use 'pub' instead of '+' to indicate public types
@@ -43,7 +47,6 @@ Currently working on:
     TODO
     ###########################
 
-    - Use NodeFactory to abstract away Node creation
     - use get(n) and set(n, T) instead of [n] indexing
     - Casting. Use "as" or @cast(type, expr) ?
     - Do we need assign/op eg. += since we won't support operator overloading for anything other
@@ -51,9 +54,8 @@ Currently working on:
     - No need for rol or ror
     - Errors need to give a module, line and column
 
-    class(
-        pub a:int
-        b:int=3)
+    class(pub a:int
+          b:int=3)
     {
         default = fn {
             this.a = 0

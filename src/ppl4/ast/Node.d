@@ -8,7 +8,13 @@ enum NodeId {
     BINARY,
     CALL,
     CAST,
-    FUNCTION,
+
+    DECLARATION,
+
+    EXTERN_FN_DECL,
+    FN_DECL,
+    FN_LITERAL,
+
     IDENTIFIER,
     IMPORT,
     MODULE,
@@ -16,18 +22,45 @@ enum NodeId {
     NUMBER,
     PARENS,
     RETURN,
-    STRUCT,
+
+    STRUCT_DECL,
+    STRUCT_LITERAL,
+
     TYPE_EXPRESSION,
-    VARIABLE
+
+    VAR_DECL,
+
+    BUILTIN_TYPE,
+    FN_TYPE,
+    STRUCT_TYPE,
+    ARRAY_TYPE,
+    TYPE_REF
 }
 
 abstract class Node {
 protected:
     bool _isResolved;
 public:
+    Module mod;
     Statement[] children;
     Node parent;
     int uid;    // unique id per Module
+
+    bool isResolved() { return _isResolved; }
+    void setResolved() { this._isResolved = true; }
+    void setUnresolved() { this._isResolved = false; }
+
+    this(Module mod) {
+        this.mod = mod;
+    }
+
+    override string toString() { return "Node%s".format(uid); }
+    override bool opEquals(const Object other) const {
+        return other.isA!Node && other.as!Node.uid == uid;
+    }
+    override size_t toHash() const @safe pure nothrow {
+        return uid;
+    }
 
     abstract NodeId id();
 
@@ -37,15 +70,16 @@ public:
     final Statement first() { return numChildren() > 0 ? children[0] : null; }
     final Statement last() { return numChildren() > 0 ? children[$-1] : null; }
 
-    final void setResolved() { this._isResolved = true; }
-
-    bool isResolved() { return _isResolved; }
-
     final Node add(Statement n) {
         n.detach();
         children ~= n;
         n.parent = this.as!Node;
         return this.as!Statement;
+    }
+
+    final Statement addAndReturn(Statement n) {
+        add(n);
+        return n;
     }
 
     final Node insertAt(int i, Statement n) {
@@ -96,7 +130,7 @@ public:
     /**
      *  Replace a child with another one.
      */
-    final void replace(Statement me, Statement withMe) {
+    final void replaceChild(Statement me, Statement withMe) {
         auto i = me.index();
         expect(i!=-1);
 
@@ -165,17 +199,13 @@ public:
         return buf;
     }
 
-    //abstract Function findFunction(string name);
-    //abstract Variable findVariable(string name);
-
     /**
-     * Find all Variables or Functions with the specified _name_.
-     * Assume the start node is an Identifier or a Call.
+     *  Find all Declarations with the specified _name_.
      */
-    void findTarget(string name, ref ITarget[] targets, Expression src) {
+    void findDeclaration(string name, ref bool[Declaration] decls, Node src) {
         if(auto p = prev()) {
             //trace("p= %s", p);
-            p.findTarget(name, targets, src);
+            p.findDeclaration(name, decls, src);
         }
     }
 
@@ -184,18 +214,22 @@ public:
      * TypeDef | Struct | Class
      */
     Node parse(ParseState state) {
-        expect(this.isA!Module || this.isA!Struct || this.isA!Function);
+        expect(this.isA!Module || this.isA!FnLiteral || this.isA!StructLiteral);
 
-        bool publicAllowed      = this.isA!Module || this.isA!Struct;
+        //trace("token = %s, %s", state.peek().kind, state.peek(1).kind);
+
+        bool publicAllowed      = this.isA!Module || this.isA!StructLiteral;
         bool structAllowed      = this.isA!Module;
         bool enumAllowed        = this.isA!Module;
-        bool returnAllowed      = this.isA!Function;
-        bool expressionsAllowed = this.isA!Function;
+        bool returnAllowed      = this.isA!FnLiteral;
+        bool expressionsAllowed = this.isA!FnLiteral;
+        bool externAllowed      = this.isA!Module;
         bool functionAllowed    = true;
         bool variableAllowed    = true;
         bool importAllowed      = true;
+        auto factory = mod.nodeFactory;
 
-        // +
+        // pub
         auto pub = checkPublicAndConsume(state);
         if(pub && !publicAllowed) {
             publicNotAllowed(state);
@@ -206,53 +240,60 @@ public:
             todo();
         }
         if("assert" == state.text()) {
-            add(state.make!Assert().parse(state));
+            addAndReturn(factory.make!Assert(state.peek())).parse(state);
             return this;
         }
         if("return" == state.text()) {
             if(!returnAllowed) statementNotAllowed(state, "return");
-            add(state.make!Return().parse(state));
+            addAndReturn(factory.make!Return(state.peek())).parse(state);
             return this;
         }
 
         auto kind1 = state.peek(1).kind;
 
+        //trace(PARSE, "state = %s", state.peek());
+
         if(kind1 == TokenKind.EQUALS) {
             // name = struct
             // name = class
             // name = fn
+            // name = extern fn
             // name = expression
+            // name = type
 
-            auto text = state.peek(2).text;
+            auto text2 = state.peek(2).text;
 
-            if("extern" == text) {
-                if(!functionAllowed) syntaxError(state);
-
-                //add(new Function(mod, pub).parse(state));
-                add(state.make!Function(pub).parse(state));
-
-            } else if("struct" == text) {
+            if(text2.isOneOf("struct", "class")) {
                 if(!structAllowed) syntaxError(state);
-                // Add Struct to tree before parsing so that we
-                // can reference it while parsing the struct
-                auto s = state.make!Struct(pub);
-                add(s);
-                s.parse(state);
+                addAndReturn(factory.make!StructDecl(pub, state.peek())).parse(state);
 
-            } else if("fn" == text) {
+            } else if(text2 == "extern") {
+
                 if(!functionAllowed) syntaxError(state);
-                add(state.make!Function(pub).parse(state));
+                if(!externAllowed) syntaxError(state);
+                addAndReturn(factory.make!ExternFnDecl(pub, state.peek())).parse(state);
+
+            } else if(text2 == "fn") {
+
+                if(!functionAllowed) syntaxError(state);
+                addAndReturn(factory.make!FnDecl(pub, state.peek())).parse(state);
+
             } else {
-                // For now assume it is a Variable
+                // This could be any type of Declaration (probably VarDecl)
 
                 if(!variableAllowed) syntaxError(state);
-                add(state.make!Variable(pub).parse(state));
+                addAndReturn(factory.make!VarDecl(pub, state.peek())).parse(state);
             }
         } else if(kind1 == TokenKind.COLON) {
+            // This could be any type of Declaration (probably VarDecl)
+
             // name : type [ = expression ]
 
             if(!variableAllowed) syntaxError(state);
-            add(state.make!Variable(pub).parse(state));
+            addAndReturn(factory.make!VarDecl(pub, state.peek())).parse(state);
+
+        // this stuff below here should just be parseExpression
+
         } else if(kind1 == TokenKind.COLON_EQUALS) {
             // reassign
             // name := Expression
@@ -260,10 +301,10 @@ public:
             parseExpression(state, this);
         } else if(kind1 == TokenKind.LBRACKET) {
             // call
-            // cast
             // name ( args )
             if(!expressionsAllowed) syntaxError(state);
             parseExpression(state, this);
+
         } else {
             todo("%s".format(state.peek()));
         }
@@ -271,22 +312,16 @@ public:
     }
 
     void resolve(ResolveState state) {
-        //trace("Resolve %s (%s children)", this.id(), numChildren());
-        foreach(stmt; children) {
-            stmt.resolve(state);
-        }
+        //trace("Resolve %s (%s children) %s", this.id(), numChildren(), isResolved());
+        resolveChildren(state);
     }
 
     void check() {
-        foreach(stmt; children) {
-            stmt.check();
-        }
+        checkChildren();
     }
 
     void generate(GenState state) {
-        foreach(stmt; children) {
-            stmt.generate(state);
-        }
+        generateChildren(state);
     }
 
     T ancestor(T)() {
@@ -322,12 +357,29 @@ public:
         }
     }
 protected:
+    void resolveChildren(ResolveState state) {
+        //trace("resolve %s", id);
+        foreach(stmt; children) {
+            stmt.resolve(state);
+        }
+    }
+    void checkChildren() {
+        foreach(stmt; children) {
+            stmt.check();
+        }
+    }
+    void generateChildren(GenState state) {
+        foreach(stmt; children) {
+            //trace(GEN, "generate %s", stmt.id());
+            stmt.generate(state);
+        }
+    }
     Type resolveTypeFromParent() {
         switch(parent.id()) with(NodeId) {
-            case VARIABLE:
-                auto var = parent.as!Variable;
-                if(var.type().isResolved()) {
-                    return var.type();
+            case VAR_DECL:
+                auto var = parent.as!VarDecl;
+                if(var.type.isResolved()) {
+                    return var.type;
                 }
                 break;
             default:

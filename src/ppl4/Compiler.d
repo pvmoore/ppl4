@@ -26,7 +26,10 @@ public:
         this.mainModule = createModule(mainModuleName);
 
         try{
-            parsePhase();
+            if(!parsePhase()) {
+                error("Parse failed");
+                return;
+            }
 
             // If we get here then there are no SyntaxErrors
 
@@ -42,32 +45,34 @@ public:
                 return;
             }
 
+            // If we get here then there were no semantic errors
+
             if(!generatePhase()) {
                 error("Generation failed");
                 return;
             }
+
+            // If we get here then LLVM files have been generated
 
             if(!linkPhase()) {
                 error("Link failed");
                 return;
             }
 
-        }catch(SyntaxError e) {
-            error("Syntax error: %s".format(e));
-        }catch(VerifyError e) {
-            error("Verification error");
+        }catch(Exception e) {
+
         }
     }
     void destroy() {
         this.llvm.destroy();
     }
     bool hasErrors() {
-        return getErrors().length > 0;
+        return modules.values().any!(it=>it.hasErrors());
     }
     CompilationError[] getErrors() {
         CompilationError[] e;
         foreach(m; modules) {
-            e ~= m.errors;
+            e ~= m.errors.values();
         }
         return e;
     }
@@ -83,20 +88,22 @@ public:
         return s;
     }
 private:
-    void parsePhase() {
-        info("★ Parse phase");
+    bool parsePhase() {
+        info(PARSE, "★ Parse phase");
         parseTime += time((){
             foreach(m; modules) {
                 m.parse(new ParseState(m, m.tokens));
+                writer.writeAST(m, "");
             }
         });
+        return !hasErrors();
     }
     bool resolvePhase() {
-        info("★ Resolve phase");
+        info(RESOLVE, "★ Resolve phase");
         return resolver.resolve(modules.values()) == 0;
     }
     bool checkPhase() {
-        info("★ Check phase");
+        info(CHECK, "★ Check phase");
         checkTime += time(() {
             foreach(m; modules) {
                 m.check();
@@ -105,7 +112,7 @@ private:
         return !hasErrors();
     }
     bool generatePhase() {
-        info("★ Generate phase");
+        info(GEN, "★ Generate phase");
         bool result = true;
         generateTime += time(() {
             foreach(m; modules) {
@@ -131,7 +138,7 @@ private:
         return result;
     }
     bool linkPhase() {
-        info("★ Link phase");
+        info(LINK, "★ Link phase");
 
         bool result;
         linkTime += time(() {

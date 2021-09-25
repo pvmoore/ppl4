@@ -3,6 +3,7 @@ module ppl4.types.Type;
 import ppl4.all;
 
 abstract class Type {
+public:
     TypeKind kind;
     int ptrDepth;
 
@@ -16,19 +17,18 @@ abstract class Type {
     final bool isVoid() { return kind == TypeKind.VOID; }
     final bool isReal() { return kind.isOneOf(TypeKind.FLOAT, TypeKind.DOUBLE); }
     final bool isInteger() { with(TypeKind) return kind.isOneOf(BYTE, SHORT, INT, LONG); }
-    final bool isStruct() { return kind == TypeKind.STRUCT; }
     final bool isFunction() { return kind == TypeKind.FUNCTION; }
     final bool isVoidPtr() { return isVoid() && isPtr(); }
 
-    bool isResolved() { return kind != TypeKind.UNKNOWN; }
+    final bool isSomeKindOfStruct() { with(TypeKind) return kind.isOneOf(STRUCT, CLASS, COMPONENT); }
+    final bool isStruct() { return kind == TypeKind.STRUCT; }
+    final bool isClass() { return kind == TypeKind.CLASS; }
+    final bool isComponent() { return kind == TypeKind.COMPONENT; }
 
     abstract bool exactlyMatches(Type other);
     abstract bool canImplicitlyCastTo(Type other);
 
-    // TODO - parse here
-    Type parse(ParseState state) {
-        return null;
-    }
+    bool isResolved() { return kind != TypeKind.UNKNOWN; }
 
     /**
      * @return a new resolved Type or this.
@@ -54,6 +54,8 @@ abstract class Type {
             case DOUBLE: t = f64Type(); break;
             case VOID: t = voidType(); break;
             case STRUCT:
+            case CLASS:
+            case COMPONENT:
                 t = this.as!StructType.struct_.llvmType;
                 break;
             case FUNCTION:
@@ -75,7 +77,7 @@ abstract class Type {
         return t;
     }
 
-    int size() {
+    final int size() {
         if(isPtr()) return 8;
         final switch(kind) with(TypeKind) {
             case BOOL:
@@ -90,6 +92,8 @@ abstract class Type {
             case DOUBLE:
                 return 8;
             case STRUCT:
+            case CLASS:
+            case COMPONENT:
                 todo();
                 return 0;
             case UNKNOWN:

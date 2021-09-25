@@ -10,25 +10,24 @@ final class Parens : Expression {
 private:
 
 public:
+    Expression expr() { return first().as!Expression; }
+
+    //==============================================================================================
     this(Module mod) {
         super(mod);
     }
 
-    Expression expr() { return first().as!Expression; }
-
-    @Implements("Node")
-    override NodeId id() { return NodeId.PARENS; }
-
-    @Implements("Expression")
+    //=================================================================================== Expression
     override Type type() { return expr().type(); }
 
-    @Implements("Expression")
     override int precedence() { return precedenceOf(Operator.PARENS); }
+
+    //========================================================================================= Node
+    override NodeId id() { return NodeId.PARENS; }
 
     /**
      * '(' Expression ')'
      */
-    @Implements("Node")
     override Parens parse(ParseState state) {
         // (
         state.skip(TokenKind.LBRACKET);
@@ -42,22 +41,20 @@ public:
         return this;
     }
 
-    @Implements("Node")
     override void resolve(ResolveState state) {
         setResolved();
         super.resolve(state);
     }
 
-    @Implements("Node")
     override void check() {
-
+        super.check();
     }
 
-    @Implements("StatNodeement")
     override void generate(GenState state) {
         first().generate(state);
     }
 
+    //======================================================================================= Object
     override string toString() {
         return "Parens";
     }

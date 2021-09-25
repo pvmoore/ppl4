@@ -8,22 +8,19 @@ import ppl4.all;
  */
 final class Return : Statement {
 public:
+    Expression expr() { expect(hasChildren()); return first().as!Expression; }
+
+    //==============================================================================================
     this(Module mod) {
         super(mod);
     }
 
-    Expression expr() {
-        expect(hasChildren());
-        return first().as!Expression;
-    }
-
-    @Implements("Node")
+    //========================================================================================= Node
     override NodeId id() { return NodeId.RETURN; }
 
     /**
      *  "return" [ Expression ]
      */
-    @Implements("Node")
     override Return parse(ParseState state) {
 
         // return
@@ -36,29 +33,27 @@ public:
         return this;
     }
 
-    @Implements("Node")
     override void resolve(ResolveState state) {
-        if(isResolved) return;
+
         if(hasChildren()) {
             expr().resolve(state);
+
             if(expr().isResolved) {
                 // Ensure the type is cast to the function type
 
+                setResolved();
             }
         } else {
             setResolved();
         }
     }
 
-    @Implements("Node")
     override void check() {
-        // Nothing to do
         super.check();
     }
 
-    @Implements("Node")
     override void generate(GenState state) {
-        auto func = ancestor!Function;
+        auto func = ancestor!FnLiteral;
 
         if(hasChildren()) {
             first().generate(state);
@@ -69,7 +64,8 @@ public:
         }
     }
 
+    //======================================================================================= Object
     override string toString() {
-        return "Return";
+        return "Return %s".format(isResolved() ? "✅" : "❌");
     }
 }

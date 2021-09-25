@@ -1,19 +1,17 @@
-module ppl4.phases.ParseState;
+module ppl4.ParseState;
 
 import ppl4.all;
 
-final class ParseState : AbsNodeMaker {
+final class ParseState {
 private:
     int pos;
     Token[] tokens;
 public:
-    this(Module mod, Token[] tokens) {
-        super(mod);
-        this.tokens = tokens;
-    }
+    Module mod;
 
-    override Token getStartToken() {
-        return peek();
+    this(Module mod, Token[] tokens) {
+        this.mod = mod;
+        this.tokens = tokens;
     }
 
     Token peek(int i = 0) {
@@ -41,6 +39,19 @@ public:
     }
     bool isKind(TokenKind k) {
         return kind() == k;
+    }
+    bool isNotKind(TokenKind k) {
+        return kind() != k;
+    }
+    bool isOneOf(TokenKind[] kinds...) {
+        auto kk = kind();
+        foreach(k; kinds) {
+            if(kk==k) return true;
+        }
+        return false;
+    }
+    bool isNotOneOf(TokenKind[] kinds...) {
+        return !isOneOf(kinds);
     }
     bool isEOF() {
         return pos >= tokens.length;
@@ -70,6 +81,7 @@ public:
         foreach(k; kinds) {
             if(kk==k) return;
         }
+        //throw new Error("");
         syntaxError(this, "Expected one of %s".format(kinds));
     }
 private:

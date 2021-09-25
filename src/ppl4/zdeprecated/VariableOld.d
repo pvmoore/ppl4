@@ -1,4 +1,4 @@
-module ppl4.ast.stmt.Variable;
+module ppl4.zdeprecated.VariableOld;
 
 import ppl4.all;
 
@@ -6,7 +6,8 @@ import ppl4.all;
  *  Variable
  *      [ Expression ]
  */
-final class Variable : Statement, ITarget {
+ /+
+final class VariableOld : Statement, ITarget {
 private:
     Type _type;
     bool _explicitType;
@@ -19,6 +20,7 @@ public:
     this(Module mod, bool isPublic) {
         super(mod);
         this.isPublic = isPublic;
+        this._type = UNKNOWN_TYPE;
     }
     void setAsParameter() {
         this._isParameter = true;
@@ -35,13 +37,13 @@ public:
     }
     @Implements("ITarget")
     override bool isMember() {
-        return parent.isA!Struct;
+        return parent.isA!StructLiteral;
     }
-    @Implements("ITarget")
+    @Implements("ITarget, Expression")
     Type type() {
         return _type;
     }
-    @Implements("ITarget")
+    @Implements("ITarget, Node")
     override bool isResolved() {
         return _isResolved;
     }
@@ -53,7 +55,7 @@ public:
     @Implements("Node")
     override NodeId id() { return NodeId.VARIABLE; }
 
-    @Implements("Statement")
+    @Implements("Node")
     override void findTarget(string name, ref ITarget[] targets, Expression src) {
         if(this.name == name) {
             targets ~= this;
@@ -67,35 +69,57 @@ public:
      * name "=" Expression
      */
     @Implements("Node")
-    override Variable parse(ParseState state) {
+    override VariableOld parse(ParseState state) {
 
-        // + (public)
-        if(state.isKind(TokenKind.PLUS)) {
+        // pub
+        if("pub" == state.text()) {
             state.next();
             this.isPublic = true;
         }
 
-        // name
-        this.name = state.text(); state.next();
+        bool isNameType = state.isKind(TokenKind.IDENTIFIER) && state.peek(1).kind == TokenKind.COLON;
+        bool isNameEquals = state.isKind(TokenKind.IDENTIFIER) && state.peek(1).kind == TokenKind.EQUALS;
 
-        // : Type
-        if(state.kind() == TokenKind.COLON) {
-            state.next();
+        if(isNameType) {
+            // name : Type [ = Expression ]
 
-            this._explicitType = true;
-            this._type = parseType(state);
+            // name
+            this.name = state.text(); state.next();
+
+            // : Type
+            if(state.kind() == TokenKind.COLON) {
+                state.next();
+
+                this._explicitType = true;
+                this._type = parseType(state, this);
+
+            }
+
+            // =
+            if(state.isKind(TokenKind.EQUALS)) {
+                state.next();
+
+                parseExpression(state, this);
+            } else if(!_explicitType) {
+                syntaxError(state, "Variable is missing type information");
+            }
+        } else if(isNameEquals) {
+            // name = Expression
+
+            // name
+            this.name = state.text(); state.next();
+
+            // =
+            if(state.isKind(TokenKind.EQUALS)) {
+                state.next();
+
+                parseExpression(state, this);
+            }
 
         } else {
-            this._type = UNKNOWN_TYPE;
-        }
-
-        // =
-        if(state.isKind(TokenKind.EQUALS)) {
-            state.next();
-
-            parseExpression(state, this);
-        } else if(!_explicitType) {
-            syntaxError(state, "Variable is missing type information");
+            // Type without a name. Must be an extern function
+            this._explicitType = true;
+            this._type = parseType(state, this);
         }
 
         return this;
@@ -103,7 +127,10 @@ public:
 
     @Implements("Node")
     override void resolve(ResolveState state) {
-        if(!type.isResolved()) {
+
+        resolveChildren(state);
+
+        if(!_type.isResolved()) {
 
             if(!_explicitType) {
                 // Get the type from the Expression
@@ -111,12 +138,13 @@ public:
                     _type = expr().type();
                     setResolved();
                 }
+            } else {
+                // resolve explicit type
+                _type = resolveType(this, _type);
             }
         } else {
             setResolved();
         }
-
-        super.resolve(state);
 
         if(!isResolved) {
             state.unresolved(this);
@@ -132,16 +160,17 @@ public:
 
     @Implements("Node")
     override void generate(GenState state) {
-
+        //trace("generating %s", name);
         if(isGlobal()) {
             if(hasChildren()) {
                 // The declaration will set this variable to zero/null
                 // TODO - where shall we put the initialisation if specified?
             }
         } else if(isMember()) {
-            // struct/class member
+            // struct/class member - handled elsewhere
+
         } else if(isParameter()) {
-            auto func = ancestor!Function;
+            auto func = ancestor!FnLiteral;
             auto params = getFunctionParams(func.llvmValue);
             auto index = this.index();
             expect(index != -1);
@@ -186,3 +215,4 @@ public:
         return "Variable%s %s:%s".format(isPublic?"(pub)":"", name, _type);
     }
 }
++/

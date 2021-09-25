@@ -6,11 +6,7 @@ final class Call : Expression {
 private:
 public:
     string name;
-    ITarget target;
-
-    this(Module mod) {
-        super(mod);
-    }
+    Declaration target;
 
     Expression[] args() {
         return children.as!(Expression[]);
@@ -21,22 +17,25 @@ public:
                        .array;
     }
 
-    @Implements("Node")
-    override NodeId id() { return NodeId.CALL; }
-
-    @Implements("Expression")
-    override Type type() {
-        return target && target.isResolved() ? target.type().as!FunctionType.returnType : UNKNOWN_TYPE;
+    //==============================================================================================
+    this(Module mod) {
+        super(mod);
     }
 
-    @Implements("Expression")
+    //=================================================================================== Expression
+    override Type type() {
+        return target && target.isResolved ? target.type.as!FunctionType.returnType : UNKNOWN_TYPE;
+    }
+
     override int precedence() { return precedenceOf(Operator.CALL); }
+
+    //========================================================================================= Node
+    override NodeId id() { return NodeId.CALL; }
 
     /**
      * name '(' { Expression } ')'
      *
      */
-    @Implements("Node")
     override Call parse(ParseState state) {
         // name
         this.name = state.text(); state.next();
@@ -61,31 +60,31 @@ public:
      *  1) Resolve target
      *  2) Cast all args to target params
      */
-    @Implements("Node")
     override void resolve(ResolveState state) {
-        if(!_isResolved) {
+        if(!isResolved) {
             resolveTarget();
 
-            if(target && target.isResolved()) {
+            if(target && target.isResolved) {
                 castArgs();
                 setResolved();
             } else {
-                state.unresolved(this);
+                setUnresolved();
             }
         }
         super.resolve(state);
     }
 
-    @Implements("Node")
     override void check() {
-
+        super.check();
     }
 
-    @Implements("Node")
     override void generate(GenState state) {
 
-        auto var = target.as!Variable;
-        auto func = target.as!Function;
+        auto var = target.as!VarDecl;
+        auto func = target.as!FnDecl;
+        auto efunc = target.as!ExternFnDecl;
+
+        //trace(GEN, "generate CALL %s var:%s func:%s", name, var, func);
 
         LLVMValueRef[] argValues;
         foreach(expr; args()) {
@@ -104,15 +103,23 @@ public:
                 state.rhs = state.builder.load(target.getLlvmValue());
                 state.rhs = state.builder.call(state.rhs, argValues, LLVMCallConv.LLVMFastCallConv);
             } else {
-                expect(target.getLlvmValue() !is null, "Function llvmValue is null: %s".format(func));
-                state.rhs = state.builder.call(target.getLlvmValue(), argValues, func.callingConvention());
+                trace(GEN, "%s", target.getLlvmValue() is null);
+
+                auto cc = func ? func.callingConvention()
+                               : efunc.callingConvention();
+
+                pplAssert(target.getLlvmValue() !is null,
+                    "Function llvmValue is null: %s %s".format(func, efunc));
+
+                state.rhs = state.builder.call(target.getLlvmValue(), argValues, cc);
             }
         }
     }
 
+    //======================================================================================= Object
     override string toString() {
-        string t = _isResolved ? target.type().toString() : "?";
-        return "Call %s:%s".format(name, t);
+        string t = isResolved ? target.type.toString() : "?";
+        return "Call %s:%s %s".format(name, t, isResolved() ? "✅" : "❌");
     }
 private:
     void resolveTarget() {
@@ -122,18 +129,18 @@ private:
 
         if(!areResolved(types)) return;
 
-        trace("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        trace("Looking for %s(%s)", name, typeString(types));
-        trace("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        ITarget[] targets;
-        findTarget(name, targets, this);
+        trace(RESOLVE, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        trace(RESOLVE, "Looking for %s(%s)", name, typeString(types));
+        trace(RESOLVE, "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        bool[Declaration] targets;
+        findDeclaration(name, targets, this);
 
         warn("TODO - filter based on parameters");
 
         if(targets.length==0) {
             // TODO - No targets
         } else if(targets.length == 1) {
-            this.target = targets[0];
+            this.target = targets.keys()[0];
         } else {
             // TODO - Multiple possible targets
         }
@@ -142,7 +149,7 @@ private:
      * Ensure arguments are cast to the exact type of the target function
      */
     void castArgs() {
-        FunctionType t = target.type().as!FunctionType;
+        FunctionType t = target.type.as!FunctionType;
         auto pTypes = t.params;
         auto aTypes = argTypes();
         expect(pTypes.length == aTypes.length);

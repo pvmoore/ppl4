@@ -34,6 +34,9 @@
 		},
 		{
 			"include" : "#colons"
+		},
+		{
+			"include" : "#rtarrow"
 		}
 	],
 	"repository": {
@@ -46,15 +49,15 @@
 				},
 				{
 					"name": "storage.type.ast",
-					"match": "\\b(ref|bool|byte|short|int|long|float|half|double|void|struct|class|enum|fn|alias)(\\*+|\\b)"
+					"match": "\\b(ref|bool|byte|short|int|long|float|half|double|void|struct|class|enum|fn|type)(\\*+|\\b)"
 				},
 				{
 					"name": "storage.modifier.public.ast",
-					"match": "\\b(Assert|AtFunc|Binary|Call|Cast|Identifier|Null|Number|Parens|TypeReference)(\\*+|\\b)"
+					"match": "\\b(FnLiteral|StructLiteral|TypeExpression|TypeRef|Type|FnType|StructType|ArrayType|Assert|AtFunc|Binary|Call|Cast|Identifier|Null|Number|Parens|TypeReference)(\\*+|\\b)"
 				},
 				{
 					"name": "keyword.control.ast",
-					"match": "\\b(Function|Import|Module|Return|Statement|Struct|Variable)(\\*+|\\b)"
+					"match": "\\b(FnDecl|ExternFnDecl|StructDecl|VarDecl|Import|Module|Return|Statement|Variable)(\\*+|\\b)"
 				},
 				{
 					"name" : "support.function.ast",
@@ -180,6 +183,12 @@
 			"patterns": [{
 				"name"  : "punctuation.colon",
 				"match" : ":"
+			}]
+		},
+		"rtarrow": {
+			"patterns": [{
+				"name"  : "punctuation.colon",
+				"match" : "\\-\\>"
 			}]
 		}
 	},

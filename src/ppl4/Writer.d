@@ -1,7 +1,8 @@
-module ppl4.phases.Writer;
+module ppl4.Writer;
 
 import ppl4.all;
 import std.stdio : File;
+import std.file  : rmdirRecurse;
 
 final class Writer {
 private:
@@ -13,14 +14,26 @@ public:
         this.config = config;
 
         // Create paths
-        if(config.writeTokens)
-            config.output.directory.add(Directory("tk")).create();
-        if(config.writeIR)
-            config.output.directory.add(Directory("ir")).create();
-        if(config.writeIR)
-            config.output.directory.add(Directory("ir_opt")).create();
-        if(config.writeAST)
-            config.output.directory.add(Directory("ast")).create();
+        if(config.writeTokens) {
+            auto dir = config.output.directory.add(Directory("tk"));
+            rmdirRecurse(dir.value);
+            dir.create();
+        }
+        if(config.writeIR) {
+            auto dir = config.output.directory.add(Directory("ir"));
+            rmdirRecurse(dir.value);
+            dir.create();
+        }
+        if(config.writeIR) {
+            auto dir = config.output.directory.add(Directory("ir_opt"));
+            rmdirRecurse(dir.value);
+            dir.create();
+        }
+        if(config.writeAST) {
+            auto dir = config.output.directory.add(Directory("ast"));
+            rmdirRecurse(dir.value);
+            dir.create();
+        }
     }
     void writeTokens(Module mod) {
         if(config.writeTokens) {
@@ -29,12 +42,12 @@ public:
             file.rawWrite(mod.tokens.toString());
         }
     }
-    void writeAST(Module mod) {
+    void writeAST(Module mod, string suffix) {
         if(config.writeAST) {
             string buf;
             mod.dump(buf);
-            auto path = config.output.directory.add(Directory("ast")).toString();
-            auto file = File(path ~ mod.name.toFilename().withExtension(".ast").value, "w");
+            auto dir = config.output.directory.add(Directory("ast")).toString();
+            auto file = File(dir ~ mod.name.toFilename().add(suffix).withExtension(".ast").value, "w");
             file.rawWrite(buf);
         }
     }

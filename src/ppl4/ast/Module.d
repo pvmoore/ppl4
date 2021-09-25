@@ -13,31 +13,38 @@ public:
     Config config;
     Writer writer;
     Token[] tokens;
-    CompilationError[] errors;
+    UniqueList!CompilationError errors;
     LLVMModule llvmValue;
 
+    NodeFactory nodeFactory;
     ScannerResults scan;
 
+    bool hasErrors() { return errors.length > 0; }
+
+    //==============================================================================================
     this(Config config, Writer writer, ModuleName name) {
+        super(this);
         this.config = config;
         this.writer = writer;
         this.name = name;
+        this.errors = new UniqueList!CompilationError;
+        this.nodeFactory = new NodeFactory(this);
     }
 
-    Variable[] getVariables() {
-        return collectChildren!Variable;
+    VarDecl[] getVariables() {
+        return collectChildren!VarDecl;
     }
-    Function[] getFunctions() {
-        return collectChildren!Function;
+    FnDecl[] getFunctions() {
+        return collectChildren!FnDecl;
     }
-    Function[] getFunctions(string name) {
+    FnDecl[] getFunctions(string name) {
         return getFunctions.filter!(it=>it.name == name).array;
     }
-    Struct[] getStructs() {
-        return collectChildren!Struct;
+    StructDecl[] getStructDecls() {
+        return collectChildren!StructDecl;
     }
-    Struct getStruct(string name) {
-        return getStructs().filter!(it=>it.name == name).frontOrNull!Struct;
+    StructDecl getStructDecl(string name) {
+        return getStructDecls().filter!(it=>it.name == name).frontOrNull!StructDecl;
     }
 
     bool declaresType(string name, bool includingPrivate) {
@@ -46,7 +53,7 @@ public:
     }
 
     void addError(CompilationError e) {
-        errors ~= e;
+        errors.add(e);
     }
 
     void lex() {
@@ -61,31 +68,33 @@ public:
         auto scanner = new ModuleScanner(this);
         this.scan = scanner.scan();
 
-        trace(scan.toString());
+        trace(LEX, scan.toString());
     }
 
-    @Implements("Node")
+    //========================================================================================= Node
     override NodeId id() { return NodeId.MODULE; }
 
-    @Implements("Node")
-    override void findTarget(string name, ref ITarget[] targets, Expression src) {
-        trace("MODULE findTarget");
-        foreach(t; collectChildren!ITarget) {
-            auto v = t.as!Variable;
-            auto f = t.as!Function;
+    override void findDeclaration(string name, ref bool[Declaration] decls, Node src) {
+        // auto decl = getStructDecl(name);
+        // if(decl) {
+        //     decls[decl] = true;
+        // }
+        //trace("MODULE findDeclaration");
+        foreach(t; collectChildren!Declaration) {
+            auto v = t.as!VarDecl;
+            auto f = t.as!FnDecl;
             if(v && v.name == name) {
-                targets ~= v;
+                decls[v] = true;
             } else if(f && f.name == name) {
-                targets ~= f;
+                decls[f] = true;
             }
         }
-        super.findTarget(name, targets, src);
+        super.findDeclaration(name, decls, src);
     }
 
     /**
-     * Struct | Class | Enum | Function | Variable | Import
+     * StructDef | Class | Enum | FnDecl | VariableOld | Import
      */
-    @Implements("Node")
     override Module parse(ParseState state) {
 
         while(!state.isEOF()) {
@@ -100,7 +109,6 @@ public:
     /**
      *
      */
-    @Implements("Node")
     override void resolve(ResolveState state) {
         setResolved();
         super.resolve(state);
@@ -108,29 +116,26 @@ public:
     /**
      * @return true if ...
      */
-    @Implements("Node")
     override void check() {
-        // Nothing to do
         super.check();
     }
 
     /**
      * @return true if the module was generated successfully
      */
-    @Implements("Node")
     override void generate(GenState state) {
         this.llvmValue = state.llvm.createModule(name.value);
 
         // TODO - Generate module scope strings
 
         // Generate module scope variables
-        auto vars = collectChildren!Variable;
+        auto vars = collectChildren!VarDecl;
         foreach(v; vars) {
             v.generateDeclaration();
         }
 
         // TODO - Generate structs and classes
-        auto structs = collectChildren!Struct;
+        auto structs = collect!StructDecl;
         foreach(s; structs) {
             s.generateDeclaration();
         }
@@ -138,10 +143,17 @@ public:
         // TODO - Generate Enums
 
         // Generate module scope functions
-        auto funcs = collectChildren!Function;
+        auto funcs = collect!FnLiteral;
         foreach(f; funcs) {
             f.generateDeclaration();
         }
+
+        // Generate extern functions
+        auto efnDecls = collect!ExternFnDecl;
+        foreach(f; efnDecls) {
+            f.generateDeclaration();
+        }
+
 
 
 
@@ -155,17 +167,18 @@ public:
         state.verify();
     }
 
+    //======================================================================================= Object
     override string toString() {
-        return "Module '%s'".format(name);
+        return "Module %s%s".format(name, isResolved ? "✅" : "❌");
     }
 protected:
     /**
-     *  Add __init() if it does not exist
+     *  Add default() if it does not exist
      */
     void addInitFunction() {
-        auto f = getFunctions("__init");
+        auto f = getFunctions("__default");
         if(f.length==0) {
-            auto i = Function.make(this, "__init", new FunctionType(null, VOID));
+            auto i = nodeFactory.makeFunction("__default", false, new FunctionType([], VOID));
             add(i);
         } else {
 

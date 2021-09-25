@@ -6,6 +6,7 @@ import ppl4.all;
  *  AtFunc (name)
  *      { Expression }  // optional depending on function
  *
+ * @isType(Expression)
  * @isPublic(Type)
  * @isFunction(Type)
  * @isStruct(Type)
@@ -19,25 +20,26 @@ private:
 public:
     string name;
 
+
+
+    //==============================================================================================
     this(Module mod) {
         super(mod);
         this._type = UNKNOWN_TYPE;
     }
 
-    @Implements("Node")
-    override NodeId id() { return NodeId.AT_FUNC; }
-
-    @Implements("Expression")
+    //=================================================================================== Expression
     override Type type() { return _type; }
 
-    @Implements("Expression")
     override int precedence() { return precedenceOf(Operator.CALL); }
+
+    //===============================================================================1========== Node
+    override NodeId id() { return NodeId.AT_FUNC; }
 
     /**
      * '@' name '(' { Expression } ')'
      *
      */
-    @Implements("Node")
     override AtFunc parse(ParseState state) {
         // name
         this.name = state.text(); state.next();
@@ -58,7 +60,6 @@ public:
         return this;
     }
 
-    @Implements("Node")
     override void resolve(ResolveState state) {
         if(!_type.isResolved()) {
             setResolved();
@@ -86,23 +87,22 @@ public:
             }
 
             if(!_type.isResolved()) {
-                state.unresolved(this);
+                setUnresolved();
             }
         }
 
         super.resolve(state);
     }
 
-    @Implements("Node")
     override void check() {
-
+        super.check();
     }
 
-    @Implements("Node")
     override void generate(GenState state) {
 
     }
 
+    //======================================================================================= Object
     override string toString() {
         return "AtFunc %s:%s".format(name, _type);
     }

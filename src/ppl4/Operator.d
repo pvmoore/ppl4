@@ -7,6 +7,7 @@ import ppl4.all;
  */
 enum Operator {
     NONE,
+    LITERAL,
 
     DOT,            // .
     CALL,           // call()
@@ -60,8 +61,7 @@ enum Operator {
     NUMBER,         //
     TYPE_EXPRESSION,//
     IDENTIFIER,     //
-    PARENS,         //
-    NULL            // null
+    PARENS          //
 }
 
 int precedenceOf(Operator o) {
@@ -121,8 +121,8 @@ int precedenceOf(Operator o) {
         case TYPE_EXPRESSION: return 50;
         case IDENTIFIER: return 50;
         case PARENS: return 50;
-        case NULL: return 50;
         case NONE: return 50;
+        case LITERAL: return 50;
     }
 }
 

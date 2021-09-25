@@ -3,6 +3,7 @@ module ppl4.lexing.Scanner;
 import ppl4.all;
 
 struct ScannerResults {
+public:
     Module mod;
     bool[string] structs;
     bool[string] enums;
@@ -51,21 +52,26 @@ public:
     ScannerResults scan() {
         for(pos = 0; pos <tokens.length; pos++) {
 
-            auto plus = peek().kind == TokenKind.PLUS;
-            if(plus) {
+            auto pub = peek().text == "pub";
+            if(pub) {
                 pos++;
             }
+            auto extern_ = peek().text == "extern";
+            if(extern_) {
+                pos++;
+            }
+
             auto name = peek().kind == TokenKind.IDENTIFIER && peek(1).kind == TokenKind.EQUALS;
             if(name) {
-                // [ '+' ] name '='
+                // [ 'pub' ] [ 'extern' ] name '='
                 auto next = peek(2).text;
 
                 if("struct" == next || "class" == next) {
-                    result.structs[peek().text] = plus;
+                    result.structs[peek().text] = pub;
                 } else if("enum" == next) {
-                    result.enums[peek().text] = plus;
-                } else if("extern" == next || "fn" == next) {
-                    result.functions[peek().text] = plus;
+                    result.enums[peek().text] = pub;
+                } else if("fn" == next) {
+                    result.functions[peek().text] = pub;
                 }
                 pos += 2;
             } else {

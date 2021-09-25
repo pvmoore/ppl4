@@ -2,22 +2,25 @@ module ppl4.types.StructType;
 
 import ppl4.all;
 
+/**
+ * Can be one of:
+ *  - struct        value type
+ *  - class         pointer type multiple instance
+ */
 final class StructType : Type {
 private:
 public:
-    Struct struct_;
+    StructLiteral struct_;
 
-    this(Struct struct_) {
-        super(TypeKind.STRUCT, struct_.isClass ? 1 : 0);
+    this(StructLiteral struct_) {
+        auto kind = struct_.isClass ? TypeKind.CLASS : TypeKind.STRUCT;
+        auto isPtr = struct_.isClass;
+        super(kind, isPtr ? 1 : 0);
         this.struct_ = struct_;
     }
 
-    bool isClass() {
-        return struct_.isClass;
-    }
-
-    override Type parse(ParseState state) {
-        todo();
+    Type parse(ParseState state) {
+        todo("parse unnamed struct");
         return this;
     }
 
@@ -40,6 +43,11 @@ public:
     }
 
     override string toString() {
-        return struct_.name ~ repeat("*", ptrDepth);
+        if(struct_.isNamed()) {
+            return struct_.name ~ repeat("*", ptrDepth);
+        } else {
+            todo();
+            return "struct()";
+        }
     }
 }

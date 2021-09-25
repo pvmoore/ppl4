@@ -1,4 +1,4 @@
-module ppl4.phases.Linker;
+module ppl4.Linker;
 
 import ppl4.all;
 

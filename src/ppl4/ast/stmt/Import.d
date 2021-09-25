@@ -11,15 +11,15 @@ private:
 public:
     string name;
 
+    //==============================================================================================
     this(Module mod) {
         super(mod);
     }
 
-    @Implements("Node")
+    //========================================================================================= Node
     override NodeId id() { return NodeId.IMPORT; }
 
-    @Implements("Node")
-    override void findTarget(string name, ref ITarget[] targets, Expression src) {
+    override void findDeclaration(string name, ref bool[Declaration] targets, Node src) {
         todo("look in external Module");
     }
 
@@ -27,27 +27,24 @@ public:
      * "import" ModuleName [ "." Symbol ]
      * name = "import" ModuleName [ "." Symbol ]
      */
-    @Implements("Node")
     override Import parse(ParseState state) {
         todo();
         return this;
     }
 
-    @Implements("Node")
     override void resolve(ResolveState state) {
 
     }
 
-    @Implements("Node")
     override void check() {
         // 1) ...
     }
 
-    @Implements("Node")
     override void generate(GenState state) {
 
     }
 
+    //======================================================================================= Object
     override string toString() {
         return "Import";
     }

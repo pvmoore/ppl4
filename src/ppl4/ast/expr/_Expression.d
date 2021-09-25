@@ -1,4 +1,4 @@
-module ppl4.ast.expr.Expression;
+module ppl4.ast.expr._Expression;
 
 import ppl4.all;
 
@@ -30,22 +30,36 @@ private:
 //==================================================================================================
 Expression lhs(ParseState state, Node parent) {
 
+    auto mod = state.mod;
+    auto factory = mod.nodeFactory;
+
     switch(state.kind()) with(TokenKind) {
         case IDENTIFIER:
+
+            if(isBuiltinType(state)) {
+                return factory.make!TypeExpression(state.peek()).parse(state);
+            }
+
             switch(state.text()) {
                 case "true":
                 case "false":
-                    return state.make!Number().parse(state);
+                    return factory.make!Number(state.peek()).parse(state);
                 case "null":
-                    return state.make!Null().parse(state);
+                    return factory.make!Null(state.peek()).parse(state);
                 case "assert":
-                    return state.make!Assert().parse(state);
+                    return factory.make!Assert(state.peek()).parse(state);
+                case "fn":
+                case "extern":
+                    return factory.make!FnLiteral(state.peek()).parse(state);
+                case "struct":
+                case "class":
+                    return factory.make!StructLiteral(state.peek()).parse(state);
 
                 default:
                     // Cast or StructValue?
                     if(isType(state)) {
                         if(isBuiltinType(state)) {
-                            return state.make!Cast().parse(state);
+                            return factory.make!Cast(state.peek()).parse(state);
                         } else {
                             // Call constructor
                             todo();
@@ -53,15 +67,15 @@ Expression lhs(ParseState state, Node parent) {
                     }
                     // Call
                     if(state.peek(1).kind == LBRACKET) {
-                        return state.make!Call().parse(state);
+                        return factory.make!Call(state.peek()).parse(state);
                     }
                     // Identifier
-                    return state.make!Identifier().parse(state);
+                    return factory.make!Identifier(state.peek()).parse(state);
             }
         case NUMBER:
-            return state.make!Number().parse(state);
+            return factory.make!Number(state.peek()).parse(state);
         case LBRACKET:
-            return state.make!Parens().parse(state);
+            return factory.make!Parens(state.peek()).parse(state);
         default:
             break;
     }
@@ -73,13 +87,16 @@ Expression lhs(ParseState state, Node parent) {
 // R H S
 //==================================================================================================
 void rhs(ParseState state, Node parent) {
+    auto mod = state.mod;
+    auto factory = mod.nodeFactory;
+
     while(true) {
         if(state.isNewLine()) return;
 
         auto text = state.text();
 
         if(text.isOneOf("and", "or", "shl", "shr", "ushr", "is")) {
-            parent = attachAndRead2(state, parent, state.make!Binary().parse(state));
+            parent = attachAndRead2(state, parent, factory.make!Binary(state.peek()).parse(state));
             continue;
         }
 
@@ -90,6 +107,7 @@ void rhs(ParseState state, Node parent) {
             case RSQUARE:
             case COMMA:
             case COLON:
+            case EQUALS:
                 return;
             case PLUS:
             case MINUS:
@@ -97,7 +115,7 @@ void rhs(ParseState state, Node parent) {
             case FSLASH:
             case PERCENT:
             case COLON_EQUALS:
-                parent = attachAndRead2(state, parent, state.make!Binary().parse(state));
+                parent = attachAndRead2(state, parent, factory.make!Binary(state.peek()).parse(state));
                 break;
             case IDENTIFIER:
                 todo();

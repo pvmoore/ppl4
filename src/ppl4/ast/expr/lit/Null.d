@@ -1,29 +1,26 @@
-module ppl4.ast.expr.Null;
+module ppl4.ast.expr.lit.Null;
 
 import ppl4.all;
 
-final class Null : Expression {
+final class Null : Literal {
 private:
-    Type _type;
+
 public:
+
+    //==============================================================================================
     this(Module mod) {
         super(mod);
-        this._type = UNKNOWN_TYPE;
     }
 
-    @Implements("Node")
-    override NodeId id() { return NodeId.NULL; }
-
-    @Implements("Expression")
+    //=================================================================================== Expression
     override Type type() { return _type; }
 
-    @Implements("Expression")
-    override int precedence() { return precedenceOf(Operator.NULL); }
+    //========================================================================================= Node
+    override NodeId id() { return NodeId.NULL; }
 
     /**
      * "null"
      */
-    @Implements("Node")
     override Null parse(ParseState state) {
         // name
         state.skip("null");
@@ -31,29 +28,27 @@ public:
         return this;
     }
 
-    @Implements("Node")
     override void resolve(ResolveState state) {
-        if(!_isResolved) {
+        if(!isResolved()) {
             this._type = resolveTypeFromParent();
 
             if(_type.isResolved) {
                 setResolved();
             } else {
-                state.unresolved(this);
+                setUnresolved();
             }
         }
     }
 
-    @Implements("Node")
     override void check() {
 
     }
 
-    @Implements("Node")
     override void generate(GenState state) {
         state.rhs = constNullPointer(_type.getLLVMType());
     }
 
+    //======================================================================================= Object
     override string toString() {
         return "Null:%s".format(_isResolved ? _type.toString() : "?");
     }

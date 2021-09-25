@@ -82,11 +82,13 @@ public:
                     }
                     break;
                 case '-':
-                    if(bufStart==0 && peek(1)>='0' && peek(1)<='9') {
-                        // negative number
-                        pos++;
+                    if(peek(1)=='>') {
+                        addToken(RT_ARROW);
                     } else if(peek(1)=='=') {
                         addToken(MINUS_EQ);
+                    } else if(bufStart==0 && peek(1)>='0' && peek(1)<='9') {
+                        // negative number
+                        pos++;
                     } else {
                         addToken(MINUS);
                     }
