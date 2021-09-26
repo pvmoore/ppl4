@@ -43,9 +43,6 @@ public:
         this._returnType = UNKNOWN_TYPE;
     }
 
-    // ================================================================================== Expression
-    override Type type() { return _type; }
-
     // ======================================================================================== Node
     override NodeId id() { return NodeId.FN_LITERAL; }
 

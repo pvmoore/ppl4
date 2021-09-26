@@ -54,6 +54,16 @@ public:
         }
     }
 
+    override void fold() {
+        super.fold();
+
+        if(left().isResolved() && right().isResolved()) {
+            // If both sides are Numbers then we can do the calculation now
+
+
+        }
+    }
+
     override void check() {
         super.check();
     }

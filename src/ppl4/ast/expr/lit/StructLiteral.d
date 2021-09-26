@@ -40,10 +40,7 @@ public:
         super(mod);
         this._type = new StructType(this);
     }
-
-    // ================================================================================== Expression
-    override Type type() { return _type; }
-
+    
     // ======================================================================================== Node
     override NodeId id() { return NodeId.STRUCT_LITERAL; }
 

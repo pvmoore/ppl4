@@ -67,7 +67,9 @@ private:
         // todo - parallel foreach here
         foreach(m; modules) {
             auto state = getState(m);
+
             m.resolve(state);
+            m.fold();
 
             writer.writeAST(m, "_%s".format(pass));
         }

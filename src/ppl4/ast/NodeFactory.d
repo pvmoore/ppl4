@@ -71,4 +71,11 @@ public:
 
         return d;
     }
+
+    Number makeNumber(Type type, string valueStr) {
+        auto n = cast(Number)make!Number(MODULE_TOKEN)
+            .withType(type);
+        n.valueStr = valueStr;
+        return n;
+    }
 }

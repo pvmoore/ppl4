@@ -2,14 +2,12 @@ module ppl4.version_;
 
 import ppl4.all;
 
-const VERSION = "0.2.0";
+const VERSION = "0.2.1";
 
 /**
 
 Currently working on:
 ----------------------------------------------------------------------------------------------------
-    Changing syntax
-    Making everything an Expression
     Change Number to
         - ILiteral/Number
         - ILiteral/Null
@@ -23,6 +21,8 @@ Currently working on:
     Changing Cast to As
 
 ----------------------------------------------------------------------------------------------------
+0.2.1 - Add Calculator to evaluate constant Binary and Unary Expressions.
+
 0.2.0 - Move Node generation to NodeFactory
       - Remove ITarget. Replace with Declaration
       - Refactor Variable, Function, Struct. Split into Declarations and Literals

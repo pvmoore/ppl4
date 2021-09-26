@@ -28,13 +28,7 @@ enum NodeId {
 
     TYPE_EXPRESSION,
 
-    VAR_DECL,
-
-    BUILTIN_TYPE,
-    FN_TYPE,
-    STRUCT_TYPE,
-    ARRAY_TYPE,
-    TYPE_REF
+    VAR_DECL
 }
 
 abstract class Node {
@@ -316,6 +310,10 @@ public:
         resolveChildren(state);
     }
 
+    void fold() {
+        foldChildren();
+    }
+
     void check() {
         checkChildren();
     }
@@ -361,6 +359,11 @@ protected:
         //trace("resolve %s", id);
         foreach(stmt; children) {
             stmt.resolve(state);
+        }
+    }
+    void foldChildren() {
+        foreach(stmt; children) {
+            stmt.fold();
         }
     }
     void checkChildren() {

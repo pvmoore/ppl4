@@ -25,7 +25,7 @@ pub putchar = extern fn(int->int)
 main = fn {
     // add(4,5)
 
-    putchar(10)
+    putchar(10 + 1)
 
     return 0
 }

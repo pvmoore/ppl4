@@ -29,6 +29,7 @@ enum Operator {
     UGTE,           // ugte
     ULT,            // ult
     ULTE,           // ulte
+    
     BITAND,         // &
     BITOR,          // |
     BITXOR,         // ^

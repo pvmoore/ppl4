@@ -13,6 +13,12 @@ public:
         this._type = UNKNOWN_TYPE;
     }
 
+    Literal withType(Type type) {
+        this._type = type;
+        return this;
+    }
+
     //=================================================================================== Expression
+    override Type type() { return _type; }
     override int precedence() { return precedenceOf(Operator.LITERAL); }
 }

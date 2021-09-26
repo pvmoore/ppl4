@@ -27,46 +27,8 @@ public:
     override NodeId id() { return NodeId.TYPE_EXPRESSION; }
 
     override TypeExpression parse(ParseState state) {
-        switch(state.text()) {
-            case "bool":
-                _type = new BuiltinType(TypeKind.BOOL);
-                break;
-            case "byte":
-                _type = new BuiltinType(TypeKind.BYTE);
-                break;
-            case "short":
-                _type = new BuiltinType(TypeKind.SHORT);
-                break;
-            case "int":
-                _type = new BuiltinType(TypeKind.INT);
-                break;
-            case "long":
-                _type = new BuiltinType(TypeKind.LONG);
-                break;
-            case "float":
-                _type = new BuiltinType(TypeKind.FLOAT);
-                break;
-            case "double":
-                _type = new BuiltinType(TypeKind.DOUBLE);
-                break;
-            case "void":
-                _type = new BuiltinType(TypeKind.VOID);
-                break;
-            case "fn":
-                _type = new FunctionType().parse(state, this);
-                break;
-            default:
-                pplAssert(false, "We shouldn't get here");
-                break;
-        }
-        if(_type) {
-            state.next();
 
-            while(TokenKind.ASTERISK == state.kind()) {
-                _type.ptrDepth++;
-                state.next();
-            }
-        }
+        this._type = parseType(state, this);
 
         return this;
     }

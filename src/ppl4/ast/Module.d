@@ -16,6 +16,7 @@ public:
     UniqueList!CompilationError errors;
     LLVMModule llvmValue;
 
+    Calculator calc;
     NodeFactory nodeFactory;
     ScannerResults scan;
 
@@ -29,6 +30,7 @@ public:
         this.name = name;
         this.errors = new UniqueList!CompilationError;
         this.nodeFactory = new NodeFactory(this);
+        this.calc = new Calculator(this);
     }
 
     VarDecl[] getVariables() {

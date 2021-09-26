@@ -68,6 +68,7 @@ import ppl4.errors.CompilationError;
 import ppl4.errors.ResolutionError;
 import ppl4.errors.SemanticError;
 
+import ppl4.eval.Calculator;
 import ppl4.eval.Value;
 
 import ppl4.lexing.Lexer;
@@ -76,15 +77,19 @@ import ppl4.lexing.Token;
 import ppl4.lexing.TokenKind;
 
 import ppl4.types.Type;
+import ppl4.types.ArrayType;
 import ppl4.types.BuiltinType;
 import ppl4.types.FunctionType;
 import ppl4.types.StructType;
+import ppl4.types.TupleType;
 import ppl4.types.TypeKind;
 import ppl4.types.TypeUtils;
 import ppl4.types.UnresolvedType;
 
-enum TRUE  = -1;
-enum FALSE = 0;
+enum TRUE       = -1;
+enum FALSE      = 0;
+enum TRUE_STR   = "-1";
+enum FALSE_STR  = "0";
 
 /**
  *  Represents a module name eg. std.util.List

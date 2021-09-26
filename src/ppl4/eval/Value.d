@@ -30,4 +30,13 @@ public:
     int getInt() { return cast(int)getLong(); }
     long getLong() { if(kind().isReal()) return cast(long)f; return i; }
     double getDouble() { if(!kind().isReal()) return cast(double)i; return f; }
+    string getString() { return type().isReal() ? "%f".format(getDouble()) : "%s".format(getLong()); }
+
+    /**
+     *
+     */
+    // Number applyBinary(Type resultType, Operator op, Value right) {
+    //     return null;
+    // }
+
 }
